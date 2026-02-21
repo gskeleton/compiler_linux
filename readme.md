@@ -44,10 +44,6 @@ There are plenty of features and fixes that are documented, see below for links:
 Binary packages can be downloaded from [Releases][releases], see the below
 sections for platform-specific installation instructions.
 
-**Note:** You will _probably_ get warnings/errors/fatals when you first build
-with this compiler — you need to add the `-Z` flag to your build configuration
-or add `#pragma compat`. See [this page][compat] for more information.
-
 You can also get the latest development binaries for Windows on
 [AppVeyor][artifacts]. This archive is built automatically on every Git commit
 and can be pretty unstable, so use at your own risk.
@@ -81,10 +77,6 @@ The download repository for openSUSE does provide older versions as well (oldest
 version: 3.10.7). Just install the version you like (e.g.:
 `zypper in pawncc-3.10.8` and run it via `$ pawncc-3.10.8 -Z -O3 [...]`).
 Parallel installation is supported.
-
-### With sampctl
-
-If you are a [sampctl][sampctl] user, you are already using this compiler!
 
 ### Building from Source
 
