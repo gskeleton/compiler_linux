@@ -299,10 +299,14 @@ int AMXAPI dbg_LoadInfo(AMX_DBG *amxdbg, FILE *fp)
       /* nothing */;
     ptr++;              /* skip '\0' too */
     for (dim = 0; dim < amxdbg->symboltbl[index]->dim; dim++) {
-      symdim = (AMX_DBG_SYMDIM *)ptr;
-      dbg_Align16((uint16_t*)&symdim->tag);
-      dbg_AlignCell(&symdim->size);
-      ptr += sizeof(AMX_DBG_SYMDIM);
+      symdim=(AMX_DBG_SYMDIM *)ptr;
+      uint16_t tag_tmp=symdim->tag;
+      dbg_Align16(&tag_tmp);
+      symdim->tag=tag_tmp;
+      ucell size_tmp=symdim->size;
+      dbg_AlignCell(&size_tmp);
+      symdim->size=size_tmp;
+      ptr+=sizeof(AMX_DBG_SYMDIM);
     } /* for */
   } /* for */
 

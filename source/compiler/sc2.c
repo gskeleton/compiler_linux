@@ -135,7 +135,13 @@ SC_FUNC void clearstk(void)
 SC_FUNC int plungequalifiedfile(char *name,char new_extensions)
 {
   unsigned int skipped_extensions = new_extensions ? 0 : 1;
-  static char extensions[][6] = { "", ".inc", ".p", ".pawn", ".pwn" };
+  static char extensions[][6] = {
+      "",
+      ".inc",
+      ".p",
+      ".pawn",
+      ".pwn"
+  };
   int found;
   struct stat st;
   FILE *fp;
@@ -160,16 +166,19 @@ SC_FUNC int plungequalifiedfile(char *name,char new_extensions)
     ext=strchr(path,'\0');      /* save position */
     strcpy(ext,extensions[ext_idx]);
     strcpy(real_path,path);
-    #if DIRSEP_CHAR!='\\'
-      if (pc_compat) {
-        char *ptr;
-        /* convert backslashes to native directory separators for maximum
-         * compatibility with the Windows compiler
-         */
-        for (ptr=real_path; *ptr!='\0'; ptr++)
-          if (*ptr=='\\')
-            *ptr=DIRSEP_CHAR;
-      }
+    /* normalize directory separator character */
+    #if DIRSEP_CHAR!='\\' /* linux */
+    char* p;
+    for (p=real_path; *p!='\0'; p++)
+      if (*p=='\\')
+        /* '\' to '/' */
+        *p=DIRSEP_CHAR;
+    #else                 /* windows */
+    char* p;
+    for (p=real_path; *p!='\0'; p++)
+      if (*p=='/')
+        /* '/' to '\' */
+        *p=DIRSEP_CHAR;
     #endif
     stat(real_path, &st);
     if (!S_ISDIR(st.st_mode))   /* ignore directories with the same name */
@@ -218,13 +227,7 @@ SC_FUNC int plungequalifiedfile(char *name,char new_extensions)
 SC_FUNC int plungefile(char *name,int try_currentpath,int try_includepaths)
 {
   char dirsep=
-    #if DIRSEP_CHAR!='\\'
-      /* use Windows directory separators in compatibility mode and
-       * native separators otherwise */
-      pc_compat ? '\\' : DIRSEP_CHAR;
-    #else
-      DIRSEP_CHAR;
-    #endif
+    DIRSEP_CHAR;
   int result=FALSE;
 
   if (try_currentpath) {
@@ -315,24 +318,6 @@ static void doinclude(int silent)
   if (c!='\0')
     check_empty(lptr+1);        /* verify that the rest of the line is whitespace */
 
-  if (pc_compat) {
-    /* create a symbol from the name of the include file; this allows the system
-     * to test for multiple inclusions
-     */
-    char dirsep=
-      #if DIRSEP_CHAR!='\\'
-        '\\';
-      #else
-        DIRSEP_CHAR;
-      #endif
-    strcpy(symname,"_inc_");
-    if ((ptr=strrchr(name,dirsep))!=NULL)
-      strlcat(symname,ptr+1,arraysize(symname));
-    else
-      strlcat(symname,name,arraysize(symname));
-    included=find_symbol(&glbtab,symname,fcurrent,-1,NULL)!=NULL;
-  } /* if */
-
   if (!included) {
     /* constant is not present, so this file has not been included yet */
 
@@ -341,9 +326,7 @@ static void doinclude(int silent)
      * between <...> are only read from the list of include directories.
      */
     result=plungefile(name,(c!='>'),TRUE);
-    if (result && pc_compat)
-      add_constant(symname,1,sGLOBAL,0);
-    else if (!result && !silent)
+    if (!result && !silent)
       error(100,name);          /* cannot read from ... (fatal error) */
   } /* if */
 }
@@ -1396,14 +1379,9 @@ static int command(void)
           if (!ok) {
             error(207);         /* unknown #pragma */
           } /* if */
-        } else if (strcmp(str,"compat")==0) {
-          symbol *sym;
-          preproc_expr(&val,NULL);
-          pc_compat=(int)val;   /* switch compatibility mode on/off */
-          sym=findconst("__compat",NULL);
-          assert(sym!=NULL);
-          sym->addr=pc_compat;
-        } else if (strcmp(str,"option")==0) {
+        } else if (strcmp(str, "compat") == 0) {
+          ; /* empty statement - ignore */
+        } else if (strcmp(str, "option") == 0) {
           char name[sNAMEMAX+1];
           int i;
           /* first gather all information, start with the tag name */
@@ -2125,6 +2103,10 @@ static const unsigned char *unpackedstring(const unsigned char *lptr,int *flags)
     }
     imlstring=MULTILINE|(*flags & RAWMODE);
     preprocess();
+     if (!freading) {
+      imlstring=0;
+      break;
+    }
     lptr=pline;
   } /* for */
   litadd(0);
@@ -2229,6 +2211,10 @@ static const unsigned char *packedstring(const unsigned char *lptr,int *flags)
     }
     imlstring=MULTILINE|(*flags & RAWMODE);
     preprocess();
+    if (!freading) {
+      imlstring=0;
+      break;
+    }
     lptr=pline;
   } /* for */
   /* save last code; make sure there is at least one terminating zero character */
