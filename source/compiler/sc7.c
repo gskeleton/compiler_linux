@@ -4,7 +4,7 @@
  *  ------------------
  *  The staging buffer allows buffered output of generated code, deletion
  *  of redundant code, optimization by a tinkering process and reversing
- *  the ouput of evaluated expressions (which is used for the reversed
+ *  the output of evaluated expressions (which is used for the reversed
  *  evaluation of arguments in functions).
  *  Initially, stgwrite() writes to the file directly, but after a call to
  *  stgset(TRUE), output is redirected to the buffer. After a call to
@@ -162,7 +162,7 @@ static SEQUENCE sequences[] = {
    *    push.pri                -
    *    load.s.pri n1           -
    *    pop.alt                 -
-   * The above also accurs for "load.pri" and for "const.pri",
+   * The above also occurs for "load.pri" and for "const.pri",
    * so add another two cases.
    */
   {
@@ -596,7 +596,7 @@ static SEQUENCE sequences[] = {
    *    load.s.pri n1           load.s.pri n1
    *    pop.alt                 -
    *
-   * The above also accurs for "load.pri" and for "const.pri",
+   * The above also occurs for "load.pri" and for "const.pri",
    * so add another two cases.
    */
   {
@@ -1458,7 +1458,7 @@ typedef struct {
  *  by '[', sENDREORDER by ']' and sEXPRSTART by '|' the following applies:
  *     '[]...'     valid, but useless; no output
  *     '[|...]     valid, but useless; only one string
- *     '[|...|...] valid and usefull
+ *     '[|...|...] valid and useful
  *     '[...|...]  invalid, first string doesn't start with '|'
  *     '[|...|]    invalid
  */
@@ -1529,7 +1529,7 @@ static int stgstring(char *start,char *end)
  *  Scraps code from the staging buffer by resetting "stgidx" to "index".
  *
  *  Global references: stgidx (altered)
- *                     staging (reffered to only)
+ *                     staging (referred to only)
  */
 SC_FUNC void stgdel(int index,cell code_index)
 {

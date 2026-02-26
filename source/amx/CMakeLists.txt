@@ -106,7 +106,7 @@ if(UNIX)
 endif()
 
 # amxFloat
-set(FLOAT_SRCS float.c amx.c)
+set(FLOAT_SRCS amxFloat.c amx.c)
 add_library(amxFloat SHARED ${FLOAT_SRCS})
 set_target_properties(amxFloat PROPERTIES PREFIX "")
 if(WIN32)

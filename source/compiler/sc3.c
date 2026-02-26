@@ -1,4 +1,4 @@
-/*  Pawn compiler - Recursive descend expresion parser
+/*  Pawn compiler - Recursive descend expression parser
  *
  *  Copyright (c) ITB CompuPhase, 1997-2005
  *
@@ -55,7 +55,7 @@ static int hier2(value *lval);
 static int hier1(value *lval1);
 static int primary(value *lval);
 static void clear_value(value *lval);
-static void callfunction(symbol *sym,value *lval_result,int matchparanthesis);
+static void callfunction(symbol *sym,value *lval_result,int matchparenthesis);
 static int dbltest(void (*oper)(),value *lval1,value *lval2);
 static int commutative(void (*oper)());
 static int constant(value *lval);
@@ -93,7 +93,7 @@ static void user_dec(void) {}
  *  no operator is found, nextop() returns 0.
  *
  *  If an operator is found in the expression, it cannot be used in a function
- *  call with omitted parantheses. Mark this...
+ *  call with omitted parentheses. Mark this...
  *
  *  Global references: sc_allowproccall   (modified)
  */
@@ -190,10 +190,10 @@ static void (*unopers[])(void) = { lneg, neg, user_inc, user_dec };
       return FALSE;
   } /* if */
 
-  /* check existance and the proper declaration of this function */
+  /* check existence and the proper declaration of this function */
   if ((sym->usage & uMISSING)!=0 || (sym->usage & uPROTOTYPED)==0) {
     char symname[2*sNAMEMAX+16];  /* allow space for user defined operators */
-    funcdisplayname(symname,sym->name);
+    funcdisplayname(symname,sizeof(symname),sym->name);
     if ((sym->usage & uMISSING)!=0)
       error(4,symname);           /* function not defined */
     if ((sym->usage & uPROTOTYPED)==0)
@@ -229,8 +229,7 @@ static void (*unopers[])(void) = { lneg, neg, user_inc, user_dec };
     pushreg(sPRI);              /* right-hand operand is in PRI */
   } else if (savealt) {
     /* for the assignment operator, ALT may contain an address at which the
-     * result must be stored; this address must be preserved accross the
-     * call
+     * result must be stored; this address must be preserved across the call
      */
     assert(lval!=NULL);         /* this was checked earlier */
     assert(lval->ident==iARRAYCELL || lval->ident==iARRAYCHAR); /* checked earlier */
@@ -447,7 +446,7 @@ static void checkfunction(value *lval)
      */
     if (sym!=curfunc && (sym->usage & uRETVALUE)==0 && (sym->flags & flagNAKED)==0) {
       char symname[2*sNAMEMAX+16];  /* allow space for user defined operators */
-      funcdisplayname(symname,sym->name);
+      funcdisplayname(symname,sizeof(symname),sym->name);
       error(209,symname);       /* function should return a value */
     } /* if */
   } else {
@@ -807,7 +806,7 @@ static cell array_levelsize(symbol *sym,int level)
  *
  *  Lowest hierarchy level (except for the , operator).
  *
- *  Global references: sc_intest        (reffered to only)
+ *  Global references: sc_intest        (referred to only)
  *                     sc_allowproccall (modified)
  */
 static int hier14(value *lval1)
@@ -894,7 +893,7 @@ static int hier14(value *lval1)
   } else if (lval1->ident==iARRAY || lval1->ident==iREFARRAY) {
     /* array assignment is permitted too (with restrictions) */
     if (oper)
-      return error(23); /* array assignment must be simple assigment */
+      return error(23); /* array assignment must be simple assignment */
     assert(lval1->sym!=NULL);
     if (array_totalsize(lval1->sym)==0)
       return error(46,lval1->sym->name);        /* unknown array size */
@@ -910,7 +909,7 @@ static int hier14(value *lval1)
     return error(22);           /* assignment to const argument */
   sc_allowproccall=FALSE;       /* may no longer use "procedure call" syntax */
 
-  lval3=*lval1;         /* save symbol to enable storage of expresion result */
+  lval3=*lval1;         /* save symbol to enable storage of expression result */
   lval1->arrayidx=org_arrayidx; /* restore array index pointer */
   if (lval1->ident==iARRAYCELL || lval1->ident==iARRAYCHAR
       || lval1->ident==iARRAY || lval1->ident==iREFARRAY)
@@ -1032,7 +1031,7 @@ static int hier14(value *lval1)
         sym2=finddepend(sym2);
         assert(sym1!=NULL && sym2!=NULL);
         /* ^^^ both arrays have the same dimensions (this was checked
-         *     earlier) so the dependend should always be found
+         *     earlier) so the dependent should always be found
          */
         if (sym1->dim.array.length!=sym2->dim.array.length)
           error(47);    /* array sizes must match */
@@ -1498,6 +1497,10 @@ static int hier2(value *lval)
       tok=lex(&val,&st);
       switch (tok) {
       case tINC:                /* lval++ */
+       if (matchtoken(tNEW) || matchtoken(tREL)) {
+          lexpush();                /* to avoid subsequent "shadowing" warnings */
+          return error(22);         /* must be lvalue */
+        } /* if */
         if (!lvalue)
           return error(22);     /* must be lvalue */
         assert(lval->sym!=NULL);
@@ -1760,7 +1763,7 @@ restart:
         } /* if */
       } else if ((sym->usage & uMISSING)!=0) {
         char symname[2*sNAMEMAX+16];  /* allow space for user defined operators */
-        funcdisplayname(symname,sym->name);
+        funcdisplayname(symname,sizeof(symname),sym->name);
         error(4,symname);             /* function not defined */
       } /* if */
       callfunction(sym,lval1,TRUE);
@@ -1970,7 +1973,7 @@ enum {
  *  Generates code to call a function. This routine handles default arguments
  *  and positional as well as named parameters.
  */
-static void callfunction(symbol *sym,value *lval_result,int matchparanthesis)
+static void callfunction(symbol *sym,value *lval_result,int matchparenthesis)
 {
 static long nest_stkusage=0L;
 static int nesting=0;
@@ -2039,7 +2042,7 @@ static int nesting=0;
   assert(arg!=NULL);
   stgmark(sSTARTREORDER);
   memset(arglist,ARG_UNHANDLED,sizeof arglist);
-  if (matchparanthesis) {
+  if (matchparenthesis) {
     /* Opening brace was already parsed, if closing brace follows, this
      * call passes no parameters.
      */
@@ -2280,7 +2283,7 @@ static int nesting=0;
       } /* if */
       assert(arglist[argpos]!=ARG_UNHANDLED);
       nargs++;
-      if (matchparanthesis) {
+      if (matchparenthesis) {
         close=matchtoken(')');
         if (!close)               /* if not paranthese... */
           if (!needtoken(','))    /* ...should be comma... */
@@ -2289,7 +2292,7 @@ static int nesting=0;
         close=!matchtoken(',');
         if (close) {              /* if not comma... */
           if (needtoken(tTERM)==1)/* ...must be end of statement */
-            lexpush();            /* push again, because end of statement is analised later */
+            lexpush();            /* push again, because end of statement is analyzed later */
         } /* if */
       } /* if */
     } while (!close && freading && !matchtoken(tENDEXPR)); /* do */

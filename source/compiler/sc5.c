@@ -213,9 +213,9 @@ static int errwarn;
  *  errors are ignored until lex() finds a semicolumn or a keyword
  *  (lex() resets "errflag" in that case).
  *
- *  Global references: inpfname   (reffered to only)
- *                     fline      (reffered to only)
- *                     fcurrent   (reffered to only)
+ *  Global references: inpfname   (referred to only)
+ *                     fline      (referred to only)
+ *                     fcurrent   (referred to only)
  *                     errflag    (altered)
  */
 SC_FUNC int error(int number,...)

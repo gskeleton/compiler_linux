@@ -3,8 +3,8 @@
 main()
     {
     print "Enter a value: "
-    new v = getvalue()
-    new f = faculty(v)
+    rel v = getvalue()
+    rel f = faculty(v)
     printf "The faculty of %d is %d\n", v, f
     }
 
@@ -12,7 +12,7 @@ faculty(n)
     {
     assert n >= 0
 
-    new result = 1
+    rel result = 1
     while (n > 0)
         result *= n--
 

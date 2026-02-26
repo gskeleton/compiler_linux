@@ -26,7 +26,7 @@ typedef struct memfile_s
 memfile_t *memfile_creat(const char *name, size_t init);
 void memfile_destroy(memfile_t *mf);
 void memfile_seek(memfile_t *mf, long seek);
-int memfile_write(memfile_t *mf, const void *buffer, size_t size);
+size_t memfile_write(memfile_t *mf, const void *buffer, size_t size);
 size_t memfile_read(memfile_t *mf, void *buffer, size_t maxsize);
 long memfile_tell(const memfile_t *mf);
 

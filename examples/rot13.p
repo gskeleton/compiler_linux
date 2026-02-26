@@ -4,7 +4,7 @@ main()
     {
     printf "Please type the string to mangle: "
 
-    new str[100]
+    rel str[100]
     getstring str, sizeof str
     rot13 str
 
@@ -13,7 +13,7 @@ main()
 
 rot13(string[])
     {
-    for (new index = 0; string[index]; index++)
+    for (rel index = 0; string[index]; index++)
         if ('a' <= string[index] <= 'z')
             string[index] = (string[index] - 'a' + 13) % 26 + 'a'
         else if ('A' <= string[index] <= 'Z')

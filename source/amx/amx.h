@@ -180,6 +180,7 @@ extern  "C" {
 
 #define UNPACKEDMAX   (((cell)1 << (sizeof(cell)-1)*8) - 1)
 #define UNLIMITED     (~1u >> 1)
+#define STKMARGIN     ((cell)(16*sizeof(cell)))
 
 struct tagAMX;
 typedef cell (AMX_NATIVE_CALL *AMX_NATIVE)(struct tagAMX *amx, const cell *params);
@@ -233,6 +234,10 @@ typedef struct tagAMX_NATIVE_INFO {
 #define AMX_USERNUM     4
 #endif
 #define sEXPMAX         19      /* maximum name length for file version <= 6 */
+/* You cannot use the value 63 here,
+ * because compiler v3.10.7 will not accept it,
+ * which causes the SA-MP Server to be unable to run the .amx file produced by your compiler.
+ */
 #define sNAMEMAX        31      /* maximum name length of symbol name */
 
 typedef struct tagAMX_FUNCSTUB {

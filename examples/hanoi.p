@@ -3,7 +3,7 @@
 main()
     {
     print "How many disks: "
-    new disks = getvalue()
+    rel disks = getvalue()
     move 1, 3, 2, disks
     }
 

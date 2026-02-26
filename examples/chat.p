@@ -25,7 +25,7 @@
 
 echo(key)
     {
-    new string[2 char] = { 0 }
+    rel string[2 char] = { 0 }
     string{0} = key == '\r' ? '\n' : key
     printf string
     }

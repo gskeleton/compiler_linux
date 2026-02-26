@@ -36,7 +36,7 @@ static int fcurseg;     /* the file number (fcurrent) for the active segment */
 /* When a subroutine returns to address 0, the AMX must halt. In earlier
  * releases, the RET and RETN opcodes checked for the special case 0 address.
  * Today, the compiler simply generates a HALT instruction at address 0. So
- * a subroutine can savely return to 0, and then encounter a HALT.
+ * a subroutine can safely return to 0, and then encounter a HALT.
  */
 SC_FUNC void writeleader(symbol *root)
 {
@@ -282,7 +282,7 @@ SC_FUNC void setlinedirect(int line)
 {
   if (sc_status==statFIRST && sc_listing) {
     char string[40];
-    sprintf(string,"#line %d\n",line);
+    (void)snprintf(string,40,"#line %d\n",line);
     pc_writeasm(outf,string);
   } /* if */
 }
@@ -348,7 +348,7 @@ SC_FUNC void startfunc(char *fname)
   stgwrite("\tproc");
   if (sc_asmfile) {
     char symname[2*sNAMEMAX+16];
-    funcdisplayname(symname,fname);
+    funcdisplayname(symname,sizeof(symname),fname);
     stgwrite("\t; ");
     stgwrite(symname);
   } /* if */
@@ -745,7 +745,7 @@ SC_FUNC void ffcall(symbol *sym,const char *label,int numargs)
   assert(sym!=NULL);
   assert(sym->ident==iFUNCTN);
   if (sc_asmfile)
-    funcdisplayname(symname,sym->name);
+    funcdisplayname(symname,sizeof(symname),sym->name);
   if ((sym->usage & uNATIVE)!=0) {
     /* reserve a SYSREQ id if called for the first time */
     assert(label==NULL);

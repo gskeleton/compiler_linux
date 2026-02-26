@@ -14,8 +14,8 @@ const EndOfExpr = '#'
 
 rpncalc(const string[])
     {
-    new index
-    new field[token]
+    rel index
+    rel field[token]
     for ( ;; )
         {
         field = gettoken(string, index)
@@ -45,11 +45,11 @@ rpncalc(const string[])
 gettoken(const string[], &index)
     {
     /* first get the next "word" from the string */
-    new word[20]
+    rel word[20]
     word = strtok(string, index)
 
     /* then parse it */
-    new field[token]
+    rel field[token]
     field[t_word] = word
     if (strlen(word) == 0)
         {

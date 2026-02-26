@@ -299,8 +299,12 @@ int AMXAPI dbg_LoadInfo(AMX_DBG *amxdbg, FILE *fp)
     ptr++;              /* skip '\0' too */
     for (dim = 0; dim < amxdbg->symboltbl[index]->dim; dim++) {
       symdim = (AMX_DBG_SYMDIM *)ptr;
-      dbg_Align16((uint16_t*)&symdim->tag);
-      dbg_AlignCell(&symdim->size);
+      uint16_t tag_tmp = symdim->tag;
+      dbg_Align16(&tag_tmp);
+      symdim->tag = tag_tmp;
+      ucell size_tmp = symdim->size;
+      dbg_AlignCell(&size_tmp);
+      symdim->size = size_tmp;
       ptr += sizeof(AMX_DBG_SYMDIM);
     } /* for */
   } /* for */
@@ -538,7 +542,7 @@ int AMXAPI dbg_GetFunctionAddress(AMX_DBG *amxdbg, const char *funcname, const c
       return AMX_ERR_NOTFOUND;
     /* verify that this line falls in the appropriate file */
     err = dbg_LookupFile(amxdbg, amxdbg->symboltbl[index]->address, &tgtfile);
-    if (err == AMX_ERR_NONE || strcmp(filename, tgtfile) == 0)
+    if (err == AMX_ERR_NONE && strcmp(filename, tgtfile) == 0)
       break;
     index++;            /* line is the wrong file, search further */
   } /* for */

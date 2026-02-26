@@ -854,7 +854,7 @@ static int settimestamp_rs232(unsigned long sec1970)
   #else
     assert(fdCom>=0);
   #endif
-  sprintf(str,"?T%lx\n",sec1970);
+  (void)snprintf(str,sizeof(str),"?T%lx\n",sec1970);
   send_rs232(str,strlen(str));
   getresponse_rs232(str,sizeof str,10);
   return strlen(str)>0 && atoi(str+1)>0;
@@ -875,7 +875,7 @@ static int remote_rs232(int port,int baud)
   #else
   if (baud==0 && fdCom>=0) {
   #endif
-    sprintf(buffer,"?U\n");
+    (void)snprintf(buffer,sizeof(buffer),"?U\n");
     #if defined __WIN32__
       WriteFile(hCom,buffer,strlen(buffer),&size,NULL);
     #else
@@ -890,7 +890,7 @@ static int remote_rs232(int port,int baud)
       CloseHandle(hCom);
     if (baud==0)
       return 0;
-    sprintf(buffer,"com%d:",port);
+    (void)snprintf(buffer,sizeof(buffer),"com%d:",port);
     hCom=CreateFile(buffer,GENERIC_READ|GENERIC_WRITE,0,NULL,OPEN_EXISTING,FILE_ATTRIBUTE_NORMAL,NULL);
     if (hCom==INVALID_HANDLE_VALUE)
       return 0;
@@ -922,7 +922,7 @@ static int remote_rs232(int port,int baud)
     } /* if */
     if (baud==0)
       return 0;
-    sprintf(buffer,"/dev/ttyS%d",port);
+    (void)snprintf(buffer,sizeof(buffer),"/dev/ttyS%d",port);
     fdCom = open(buffer,O_RDWR|O_NOCTTY|O_NONBLOCK);
     if (fdCom<0)
       return 0;
@@ -1116,7 +1116,7 @@ static void remote_read_rs232(AMX *amx,cell vaddr,int number)
   cell *cptr;
 
   while (number>0) {
-    sprintf(buffer,"?M%lx,%x\n",(long)vaddr,(number>10) ? 10 : number);
+    (void)snprintf(buffer,sizeof(buffer),"?M%lx,%x\n",(long)vaddr,(number>10) ? 10 : number);
     len=strlen(buffer);
     send_rs232(buffer,len);
     getresponse_rs232(buffer,sizeof buffer,100);
@@ -1142,12 +1142,12 @@ static void remote_write_rs232(AMX *amx,cell vaddr,int number)
   while (number>0) {
     num=(number>10) ? 10 : number;
     number-=num;
-    sprintf(buffer,"?W%lx",(long)vaddr);
+    (void)snprintf(buffer,sizeof(buffer),"?W%lx",(long)vaddr);
     while (num>0) {
       if (amx_GetAddr(amx,vaddr,&cptr)!=AMX_ERR_NONE)
         return;
       strcat(buffer,",");
-      sprintf(buffer+strlen(buffer),"%x",*cptr);
+      (void)snprintf(buffer+strlen(buffer),buffer_size-strlen(buffer),"%x",*cptr);
       num--;
       vaddr+=sizeof(cell);
     } /* while */
@@ -1187,7 +1187,7 @@ static int remote_transfer_rs232(const char *filename)
   fseek(fp,0,SEEK_SET);
 
   /* set up */
-  sprintf(str,"?P %lx,%s\n",size,skippath(filename));
+  (void)snprintf(str,sizeof(str),"?P %lx,%s\n",size,skippath(filename));
   len=strlen(str);
   send_rs232(str,len);
   getresponse_rs232(str,sizeof str,100);

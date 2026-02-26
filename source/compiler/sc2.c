@@ -131,7 +131,13 @@ SC_FUNC void clearstk(void)
 
 SC_FUNC int plungequalifiedfile(char *name)
 {
-static char extensions[][6] = { "", ".inc", ".p", ".pawn" };
+  static char extensions[][6] = {
+      "",
+      ".inc",
+      ".p",
+      ".pawn",
+      ".pwn"
+  };
   int found;
   struct stat st;
   FILE *fp;
@@ -142,11 +148,11 @@ static char extensions[][6] = { "", ".inc", ".p", ".pawn" };
 
   fp=NULL;
   ext_idx=0;
-  path=(char *)malloc(strlen(name)+sizeof(extensions[0]));
+  path=(char *)malloc(strlen(name)+sizeof(extensions[0])+1);
   if (path==NULL)
     error(103);                 /* insufficient memory */
   strcpy(path,name);
-  real_path=(char *)malloc(strlen(name)+sizeof(extensions[0]));
+  real_path=(char *)malloc(strlen(name)+sizeof(extensions[0])+1);
   if (real_path==NULL)
     error(103);                 /* insufficient memory */
   do {
@@ -154,16 +160,19 @@ static char extensions[][6] = { "", ".inc", ".p", ".pawn" };
     ext=strchr(path,'\0');      /* save position */
     strcpy(ext,extensions[ext_idx]);
     strcpy(real_path,path);
-    #if DIRSEP_CHAR!='\\'
-      if (pc_compat) {
-        char *ptr;
-        /* convert backslashes to native directory separators for maximum
-         * compatibility with the Windows compiler
-         */
-        for (ptr=real_path; *ptr!='\0'; ptr++)
-          if (*ptr=='\\')
-            *ptr=DIRSEP_CHAR;
-      }
+    /* normalize directory separator character */
+    #if DIRSEP_CHAR!='\\' /* linux */
+    char* p;
+    for (p=real_path; *p!='\0'; p++)
+      if (*p=='\\')
+        /* '\' to '/' */
+        *p=DIRSEP_CHAR;
+    #else                 /* windows */
+    char* p;
+    for (p=real_path; *p!='\0'; p++)
+      if (*p=='/')
+        /* '/' to '\' */
+        *p=DIRSEP_CHAR;
     #endif
     stat(real_path, &st);
     if (!S_ISDIR(st.st_mode))   /* ignore directories with the same name */
@@ -173,7 +182,7 @@ static char extensions[][6] = { "", ".inc", ".p", ".pawn" };
       found=FALSE;
     }
     ext_idx++;
-  } while (!found && ext_idx<(sizeof extensions / sizeof extensions[0]));
+  } while (!found && ext_idx<sizearray(extensions));
   if (!found) {
     *ext='\0';                  /* restore filename */
     return FALSE;
@@ -207,14 +216,7 @@ static char extensions[][6] = { "", ".inc", ".p", ".pawn" };
 
 SC_FUNC int plungefile(char *name,int try_currentpath,int try_includepaths)
 {
-  char dirsep=
-    #if DIRSEP_CHAR!='\\'
-      /* use Windows directory separators in compatibility mode and
-       * native separators otherwise */
-      pc_compat ? '\\' : DIRSEP_CHAR;
-    #else
-      DIRSEP_CHAR;
-    #endif
+  char dirsep=DIRSEP_CHAR;
   int result=FALSE;
 
   if (try_currentpath) {
@@ -230,7 +232,7 @@ SC_FUNC int plungefile(char *name,int try_currentpath,int try_includepaths)
         if (len+strlen(name)<_MAX_PATH) {
           char path[_MAX_PATH];
           strlcpy(path,inpfname,len+1);
-          strlcat(path,name,sizeof path);
+          strlcat(path,name,sizearray(path));
           result=plungequalifiedfile(path);
         } /* if */
       } /* if */
@@ -242,8 +244,8 @@ SC_FUNC int plungefile(char *name,int try_currentpath,int try_includepaths)
     char *ptr;
     for (i=0; !result && (ptr=get_path(i))!=NULL; i++) {
       char path[_MAX_PATH];
-      strlcpy(path,ptr,sizeof path);
-      strlcat(path,name,sizeof path);
+      strlcpy(path,ptr,sizearray(path));
+      strlcat(path,name,sizearray(path));
       result=plungequalifiedfile(path);
     } /* while */
   } /* if */
@@ -277,7 +279,6 @@ static void doinclude(int silent)
   char *ptr;
   char c;
   int i, result;
-  int included=FALSE;
 
   while (*lptr<=' ' && *lptr!='\0')         /* skip leading whitespace */
     lptr++;
@@ -291,11 +292,11 @@ static void doinclude(int silent)
   } /* if */
 
   i=0;
-  while (*lptr!=c && *lptr!='\0' && i<sizeof name - 1)  /* find the end of the string */
+  while (*lptr!=c && *lptr!='\0' && i<sizearray(name)-1)  /* find the end of the string */
     name[i++]=*lptr++;
   while (i>0 && name[i-1]<=' ')
     i--;                        /* strip trailing whitespace */
-  assert(i>=0 && i<sizeof name);
+  assert(i>=0 && i<sizearray(name));
   name[i]='\0';                 /* zero-terminate the string */
 
   if (*lptr!=c) {               /* verify correct string termination */
@@ -305,37 +306,19 @@ static void doinclude(int silent)
   if (c!='\0')
     check_empty(lptr+1);        /* verify that the rest of the line is whitespace */
 
-  if (pc_compat) {
-    /* create a symbol from the name of the include file; this allows the system
-     * to test for multiple inclusions
-     */
-    char dirsep=
-      #if DIRSEP_CHAR!='\\'
-        '\\';
-      #else
-        DIRSEP_CHAR;
-      #endif
-    strcpy(symname,"_inc_");
-    if ((ptr=strrchr(name,dirsep))!=NULL)
-      strlcat(symname,ptr+1,sizeof symname);
-    else
-      strlcat(symname,name,sizeof symname);
-    included=find_symbol(&glbtab,symname,fcurrent,-1,NULL)!=NULL;
-  } /* if */
-
-  if (!included) {
-    /* constant is not present, so this file has not been included yet */
-
-    /* Include files between "..." or without quotes are read from the current
-     * directory, or from a list of "include directories". Include files
-     * between <...> are only read from the list of include directories.
-     */
-    result=plungefile(name,(c!='>'),TRUE);
-    if (result && pc_compat)
-      add_constant(symname,1,sGLOBAL,0);
-    else if (!result && !silent)
-      error(100,name);          /* cannot read from ... (fatal error) */
-  } /* if */
+  /* After extracting the include file name, attempt to open it.
+   * The search path depends on the quoting: 
+   * - If the name was enclosed in double quotes or no quotes, it is
+   *   looked for in the current directory first, then in the list of
+   *   include directories.
+   * - If enclosed in angle brackets (<...>), it is searched only in
+   *   the list of include directories.
+   * The result of plungefile() indicates success; if silent is false
+   * and the file cannot be opened, a fatal error is reported.
+   */
+  result=plungefile(name,(c!='>'),TRUE);
+  if (!result && !silent)
+    error(100,name);          /* cannot read from ... (fatal error) */
 }
 
 /*  readline
@@ -398,6 +381,9 @@ static void readline(unsigned char *line)
     } else {
       /* check whether to erase leading whitespace after '\\' on next line */
       if (cont) {
+        unsigned char* ptr=line;
+        while (*ptr<=' ' && *ptr!='\0')
+          ptr++;
         if (ptr!=line)
           memmove(line,ptr,strlen((char*)ptr)+1);
       } /* if */
@@ -414,6 +400,10 @@ static void readline(unsigned char *line)
           ptr--;        /* skip trailing whitespace */
         if (*ptr=='\\') {
           cont=TRUE;
+          /* set '\a' at the position of '\\' to make it possible to check
+           * for a line continuation in a single line comment (error 49)
+           */
+          *ptr++ = '\a';
           *ptr='\0';    /* erase '\n' (and any trailing whitespace) */
         } /* if */
       } /* if */
@@ -441,6 +431,7 @@ static void readline(unsigned char *line)
 static void stripcomment(unsigned char *line)
 {
   char c;
+  char* continuation;
   #if !defined SC_LIGHT
     #define COMMENT_LIMIT 100
     #define COMMENT_MARGIN 40   /* length of the longest word */
@@ -512,6 +503,24 @@ static void stripcomment(unsigned char *line)
         if (icomment==2)
           *line++=' ';
       } else if (*line=='/' && *(line+1)=='/'){  /* comment to end of line */
+        continuation=(char*)line;
+        while ((continuation=strchr(continuation,'\a'))!=NULL) {
+          /* don't give the error if the next line is also commented out.
+             it is quite annoying to get an error for commenting out a define using:
+
+             #define LONG_MACRO\
+                          did span \
+                          multiple lines
+
+           * see also: https://github.com/pawn-lang/compiler/releases/tag/v3.10.8
+           */
+          while (*continuation<=' ' && *continuation!='\0')
+            continuation++;             /* skip whitespace */
+          if (*continuation!='/' || *(continuation+1)!='/') {
+            error(49);    /* invalid line continuation */
+            break;
+          }
+        }
         #if !defined SC_LIGHT
           if (*(line+2)=='/' && *(line+3)<=' ') {
             /* documentation comment */
@@ -903,6 +912,23 @@ static const unsigned char *getstring(unsigned char *dest,int max,const unsigned
   return line;
 }
 
+/*  strdupwithouta
+ *
+ *  Duplicate a string, stripping out `\a`s.
+ */
+static char* strdupwithouta(const char* sourcestring)
+{
+  char* result=strdup(sourcestring);
+  char* a=result;
+  if (result==NULL) {
+    return NULL;
+  }
+  while ((a=strchr(a,'\a'))!=NULL) {
+    *a=' ';
+  }
+  return result;
+}
+
 enum {
   CMD_NONE,
   CMD_TERM,
@@ -1047,7 +1073,7 @@ static int command(void)
   case tpFILE:
     if (!SKIPPING) {
       char pathname[_MAX_PATH];
-      lptr=getstring((unsigned char*)pathname,sizeof pathname,lptr);
+      lptr=getstring((unsigned char*)pathname,sizearray(pathname),lptr);
       if (strlen(pathname)>0) {
         free(inpfname);
         inpfname=duplicatestring(pathname);
@@ -1088,10 +1114,10 @@ static int command(void)
           while (*lptr<=' ' && *lptr!='\0')
             lptr++;
           if (*lptr=='"') {
-            lptr=getstring((unsigned char*)name,sizeof name,lptr);
+            lptr=getstring((unsigned char*)name,sizearray(name),lptr);
           } else {
             int i;
-            for (i=0; i<sizeof name && alphanum(*lptr); i++,lptr++)
+            for (i=0; i<sizearray(name) && alphanum(*lptr); i++,lptr++)
               name[i]=*lptr;
             name[i]='\0';
           } /* if */
@@ -1115,7 +1141,7 @@ static int command(void)
           /* remove leading whitespace */
           while (*lptr<=' ' && *lptr!='\0')
             lptr++;
-          pc_deprecate=strdup((const char *)lptr);
+          pc_deprecate=strdupwithouta((const char *)lptr);
           if (pc_deprecate!=NULL) {
             char *ptr=pc_deprecate+strlen(pc_deprecate)-1;
             /* remove trailing whitespace */
@@ -1132,10 +1158,10 @@ static int command(void)
           while (*lptr<=' ' && *lptr!='\0')
             lptr++;
           if (*lptr=='"') {
-            lptr=getstring((unsigned char*)name,sizeof name,lptr);
+            lptr=getstring((unsigned char*)name,sizearray(name),lptr);
           } else {
             int i;
-            for (i=0; i<sizeof name && (alphanum(*lptr) || *lptr=='-'); i++,lptr++)
+            for (i=0; i<sizearray(name) && (alphanum(*lptr) || *lptr=='-'); i++,lptr++)
               name[i]=*lptr;
             name[i]='\0';
           } /* if */
@@ -1159,7 +1185,7 @@ static int command(void)
           /* first gather all information, start with the tag name */
           while (*lptr<=' ' && *lptr!='\0')
             lptr++;
-          for (i=0; i<sizeof name && alphanum(*lptr); i++,lptr++)
+          for (i=0; i<sizearray(name) && alphanum(*lptr); i++,lptr++)
             name[i]=*lptr;
           name[i]='\0';
           /* then the precision (for fixed point arithmetic) */
@@ -1202,7 +1228,7 @@ static int command(void)
             /* get the name */
             while (*lptr<=' ' && *lptr!='\0')
               lptr++;
-            for (i=0; i<sizeof name && alphanum(*lptr); i++,lptr++)
+            for (i=0; i<sizearray(name) && alphanum(*lptr); i++,lptr++)
               name[i]=*lptr;
             name[i]='\0';
             /* get the symbol */
@@ -1252,23 +1278,41 @@ static int command(void)
           if (!ok) {
             error(207);         /* unknown #pragma */
           }
+        } else if (strcmp(str,"once")==0) {
+            char symname[sNAMEMAX];
+            char *ptr;
+            symbol *included;
+            strcpy(symname,"_inc_");
+            char dirsep=DIRSEP_CHAR;
+            if ((ptr=strrchr(inpfname,dirsep))!=NULL)
+              strlcat(symname,ptr+1,sizeof symname);
+            else
+              strlcat(symname,inpfname,sizeof symname);
+            included=find_symbol(&glbtab,symname,fcurrent,-1,NULL);
+            if (included==NULL)
+              /* couldn't find '_inc_includename' in symbols table */
+              add_constant(symname,1,sGLOBAL,0); /* add symname ('_inc_includename') to global symbols table */
+            else {
+              /* found '_inc_includename' symbol in global symbols table  */
+              if (!SKIPPING) {
+                assert(inpf!=NULL);
+                if (inpf!=inpf_org)
+                  pc_closesrc(inpf); /* close input file (like #endinput) */
+                inpf=NULL;
+              } /* if */
+            }
         } else if (strcmp(str,"compat")==0) {
-          cell val;
-          symbol *sym;
-          preproc_expr(&val,NULL);
-          pc_compat=(int)val;   /* switch compatibility mode on/off */
-          sym=findconst("__compat",NULL);
-          assert(sym!=NULL);
-          sym->addr=pc_compat;
+          ; /* empty statement - ignore */
         } else if (strcmp(str,"option")==0) {
           char name[sNAMEMAX+1];
           int i;
           /* first gather all information, start with the tag name */
           while (*lptr<=' ' && *lptr!='\0')
             lptr++;
-          for (i=0; i<sizeof name && *lptr>' '; i++,lptr++)
+          for (i=0; i<sNAMEMAX && *lptr>' '; i++,lptr++)
             name[i]=*lptr;
-          name[i]='\0';
+          /* [i] -> [i-1] serves as a correction to the following commit: b8dbbe9e433930206eb8bc974c1dce03ba14d300 */
+          name[i-1]='\0';
           parsesingleoption(name);
         } else {
           error(207);           /* unknown #pragma */
@@ -1293,12 +1337,12 @@ static int command(void)
   case tpEMIT: {
     if (!SKIPPING) {
       /* write opcode to output file */
-      char name[40];
+      char name[MAX_INSTR_LEN];
       int i;
       insert_dbgline(fline);
       while (*lptr<=' ' && *lptr!='\0')
         lptr++;
-      for (i=0; i<40 && (isalpha(*lptr) || *lptr=='.'); i++,lptr++)
+      for (i=0; i<sizeof(name)-1 && (isalpha(*lptr) || *lptr=='.'); i++,lptr++)
         name[i]=(char)tolower(*lptr);
       name[i]='\0';
       stgwrite("\t");
@@ -1361,7 +1405,7 @@ static int command(void)
               break;
             } else if (current_token==tRATIONAL) {
               /* change the first bit to make float negative value */
-              outval(val|((cell)1 << (PAWN_CELL_SIZE-1)),FALSE);
+              outval(val|(cell)((ucell)1 << (PAWN_CELL_SIZE-1)),FALSE);
               code_idx+=opargs(1);
               break;
             } else {
@@ -1371,7 +1415,7 @@ static int command(void)
             } /* if */
           } /* if */
           if (tok<256)
-            sprintf(s2,"%c",(char)tok);
+            (void)snprintf(s2,sizeof(s2),"%c",(char)tok);
           else
             strcpy(s2,sc_tokens[tok-tFIRST]);
           error(1,sc_tokens[tSYMBOL-tFIRST],s2);
@@ -1494,16 +1538,15 @@ static int command(void)
 #endif
   case tpERROR:
   case tpWARNING:
-    while (*lptr<=' ' && *lptr!='\0')
-      lptr++;
+    /* empty warnings causing serves as a correction to the following commit: b1db8972b9a75f7e298236cbae1180d104a0ee1f */
     while (*lptr<=' ' && *lptr!='\0')
       lptr++;
     if (!SKIPPING) {
-      char *usermsg=strdup((const char *)lptr);
+      char *usermsg=strdupwithouta((const char *)lptr);
       if (usermsg!=NULL) {
         char *ptr=usermsg+strlen(usermsg)-1;
         /* remove trailing whitespace and newlines */
-        while (*ptr<=' ')
+        while (ptr >= usermsg && *ptr <= ' ')
           *ptr--='\0';
         if (tok==tpERROR)
           error(111,usermsg); /* user error */
@@ -1667,7 +1710,7 @@ static int substpattern(unsigned char *line,size_t buffersize,char *pattern,char
             e=skippgroup(e);
           if (*e!='\0')
             e++;      /* skip non-alphapetic character (or closing quote of
-                       * a string, or the closing paranthese of a group) */
+                       * a string, or the closing parenthesis of a group) */
         } /* while */
         /* store the parameter (overrule any earlier) */
         if (args[arg]!=NULL)
@@ -1804,7 +1847,7 @@ static void substallpatterns(unsigned char *line,int buffersize)
     /* if matching the operator "defined", skip it plus the symbol behind it */
     if (strncmp((char*)start,"defined",7)==0 && *(start+7)<=' ') {
       start+=7;         /* skip "defined" */
-      /* skip white space & parantheses */
+      /* skip white space & parentheses */
       while ((*start<=' ' && *start!='\0') || *start=='(')
         start++;
       /* skip the symbol behind it */
@@ -1893,6 +1936,10 @@ static const unsigned char *unpackedstring(const unsigned char *lptr,int *flags)
     while (*lptr==' ' || *lptr=='\t')     /* this is as defines with parameters may add them */
       lptr++;                             /* when you use a space after , in a match pattern */
   while (*lptr!='\0') {
+    if (*lptr=='\a') {
+      lptr++;
+      continue;
+    } /* if */
     if (!instring) {
       if (*lptr=='\"') {
         instring=1;
@@ -1946,7 +1993,7 @@ static const unsigned char *unpackedstring(const unsigned char *lptr,int *flags)
 
   if (*lptr==',' || *lptr==')' || *lptr=='}' || *lptr==';' ||
       *lptr==':' || *lptr=='\n' || *lptr=='\r')
-    lptr=stringize;           /* backtrack to end of last string for closing " */
+    lptr=stringize;     /* backtrack to end of last string for closing " */
   return lptr;
 }
 
@@ -1963,6 +2010,10 @@ static const unsigned char *packedstring(const unsigned char *lptr,int *flags)
   i=sizeof(ucell)-(sCHARBITS/8); /* start at most significant byte */
   val=0;
   while (*lptr!='\0') {
+      if (*lptr == '\a') {          /* ignore '\a' (which was inserted at a line concatenation) */
+        lptr++;
+        continue;
+      } /* if */
     if (!instring) {
       if (*lptr=='\"') {
         instring=1;
@@ -2090,7 +2141,7 @@ char *sc_tokens[] = {
          "assert", "*begin", "break", "case", "char", "const", "continue", "default",
          "defined", "do", "else", "emit", "__emit", "*end", "enum", "exit", "for",
          "forward", "goto", "if", "native", "new", "operator", "public", "return",
-         "sizeof", "sleep", "state", "static", "stock", "switch", "tagof", "*then",
+         "sizeof", "sleep", "state", "static", "stock", "switch", "tagof", "rel", "*then",
          "while",
          "#assert", "#define", "#else", "#elseif", "#emit", "#endif", "#endinput",
          "#endscript", "#error", "#file", "#if", "#include", "#line", "#pragma",
@@ -2382,13 +2433,13 @@ SC_FUNC int needtoken(int token)
     /* token already pushed back */
     assert(_pushed);
     if (token<256)
-      sprintf(s1,"%c",(char)token);        /* single character token */
+      (void)snprintf(s1,sizeof(s1),"%c",(char)token);        /* single character token */
     else
       strcpy(s1,sc_tokens[token-tFIRST]);  /* multi-character symbol */
     if (!freading)
       strcpy(s2,"-end of file-");
     else if (_lextok<256)
-      sprintf(s2,"%c",(char)_lextok);
+      (void)snprintf(s2,sizeof(s2),"%c",(char)_lextok);
     else
       strcpy(s2,sc_tokens[_lextok-tFIRST]);
     error(1,s1,s2);     /* expected ..., but found ... */
@@ -2480,7 +2531,7 @@ SC_FUNC void litinsert(cell value,int pos)
  *  Return current literal character and increase the pointer to point
  *  just behind this literal character.
  *
- *  Note: standard "escape sequences" are suported, but the backslash may be
+ *  Note: standard "escape sequences" are supported, but the backslash may be
  *        replaced by another character; the syntax '\ddd' is supported,
  *        but ddd must be decimal!
  */

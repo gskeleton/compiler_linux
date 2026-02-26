@@ -137,7 +137,7 @@ static int udp_Receive(char *message,size_t maxmsg,char *source)
   if (size==-1)
     return -1;
   if (source!=NULL)
-    sprintf(source, "%s:%d", inet_ntoa(sSource.sin_addr), ntohs(sSource.sin_port));
+    (void)sprintf(source, "%s:%d", inet_ntoa(sSource.sin_addr), ntohs(sSource.sin_port));
 
   return size;
 }

@@ -121,7 +121,7 @@ static const TCHAR *rawcmdline(void)
        */
       FILE *fp;
       size_t fsize;
-      sprintf(cmdbuffer, "/proc/%d/cmdline", getpid());
+      (void)snprintf(cmdbuffer, sizeof(cmdbuffer), "/proc/%d/cmdline", getpid());
       if ((fp = fopen(cmdbuffer, "r")) != NULL) {
         char *ptr;
         fseek(fp, 0, SEEK_END);

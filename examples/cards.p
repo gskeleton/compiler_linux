@@ -16,21 +16,21 @@ enum CardDescription
     CardValue,
     }
 
-new CardNames[CardTypes][] = { !"Ace", !"Two", !"Three", !"Four", !"Five",
+rel CardNames[CardTypes][] = { !"Ace", !"Two", !"Three", !"Four", !"Five",
                                !"Six", !"Seven", !"Eight", !"Nine", !"Ten",
                                !"Jack", !"Queen", !"King" }
-new CardValues[CardTypes]  = { 11, 2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 10, 10 }
+rel CardValues[CardTypes]  = { 11, 2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 10, 10 }
 
 main()
     {
-    new Cards[ TotalCards ][ CardDescription ]
+    rel Cards[ TotalCards ][ CardDescription ]
 
     /* fill in the cards */
-    for (new suit = 0; suit < CardSuits; suit++)
+    for (rel suit = 0; suit < CardSuits; suit++)
         {
-        for (new card = 0; card < CardTypes; card++)
+        for (rel card = 0; card < CardTypes; card++)
             {
-            new index = suit*CardTypes + card
+            rel index = suit*CardTypes + card
             strpack Cards[ index ][CardName], CardNames[ card ]
             Cards[ index ][ CardSuit ] = suit
             Cards[ index ][ CardValue ] = CardValues[ card ]
@@ -38,24 +38,24 @@ main()
         }
 
     /* shuffle the cards (swap an arbitrary number of randomly selected cards) */
-    for (new iter = 0; iter < 200; iter++)
+    for (rel iter = 0; iter < 200; iter++)
         {
-        new first = random(TotalCards)
-        new second = random(TotalCards)
-        new TempCard[ CardDescription ]
+        rel first = random(TotalCards)
+        rel second = random(TotalCards)
+        rel TempCard[ CardDescription ]
         TempCard = Cards[first]
         Cards[ first ] = Cards[ second ]
         Cards[ second ] = TempCard
         }
 
     /* print the cards with a subroutine */
-    for (new card = 0; card < TotalCards; card++)
+    for (rel card = 0; card < TotalCards; card++)
         PrintCard Cards[ card]
     }
 
 PrintCard( TheCard[ CardDescription ] )
     {
-    new SuitNames[ CardSuits ][] = { !"Clubs", !"Diamonds",
+    rel SuitNames[ CardSuits ][] = { !"Clubs", !"Diamonds",
                                      !"Hearts", !"Spades" }
 
     printf !"%s of %s (valued %d)\n",

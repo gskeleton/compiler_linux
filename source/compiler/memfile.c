@@ -8,6 +8,7 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdint.h>
 #include "memfile.h"
 #if defined FORTIFY
   #include <alloc/fortify.h>
@@ -21,6 +22,9 @@ memfile_t *memfile_creat(const char *name, size_t init)
 	memfile_t mf;
 	memfile_t *pmf;
 
+	if (init < 1)
+		init = 1;
+	
 	mf.size = init;
 	mf.base = (char *)malloc(init);
 	mf.usedoffs = 0;
@@ -31,10 +35,19 @@ memfile_t *memfile_creat(const char *name, size_t init)
 
 	mf.offs = 0;
 
-	pmf = (memfile_t *)malloc(sizeof(memfile_t));
-	memcpy(pmf, &mf, sizeof(memfile_t));
+	pmf = malloc(sizeof(*pmf));
+	if (!pmf) {
+		free(mf.base);
+		return NULL;
+	}
+	*pmf = mf;
 
 	pmf->name = strdup(name);
+	if (!pmf->name) {
+		free(pmf->base);
+		free(pmf);
+		return NULL;
+	}
 
 	return pmf;
 }
@@ -50,7 +63,12 @@ void memfile_destroy(memfile_t *mf)
 void memfile_seek(memfile_t *mf, long seek)
 {
 	assert(mf != NULL);
-	mf->offs = seek;
+	if (seek < 0)
+		seek = 0;
+	if ((size_t)seek > mf->usedoffs)
+		seek = mf->usedoffs;
+
+	mf->offs = (size_t)seek;
 }
 
 long memfile_tell(const memfile_t *mf)
@@ -84,21 +102,29 @@ size_t memfile_read(memfile_t *mf, void *buffer, size_t maxsize)
 	return maxsize;
 }
 
-int memfile_write(memfile_t *mf, const void *buffer, size_t size)
+size_t memfile_write(memfile_t *mf, const void *buffer, size_t size)
 {
 	assert(mf != NULL);
 	assert(buffer != NULL);
 	if (mf->offs + size > mf->size)
 	{
-	  char *orgbase = mf->base; /* save, in case realloc() fails */
-		size_t newsize = (mf->size + size) * 2;
-		mf->base = (char *)realloc(mf->base, newsize);
-		if (!mf->base)
-		{
-		  mf->base = orgbase;     /* restore old pointer to avoid a memory leak */
-			return 0;
+		size_t required = mf->offs + size;
+		if (required > mf->size) {
+			size_t newsize = mf->size ? mf->size : 1;
+
+			while (newsize < required) {
+				if (newsize > SIZE_MAX / 2)
+					return 0;
+				newsize *= 2;
+			}
+
+			char *newbase = realloc(mf->base, newsize);
+			if (!newbase)
+				return 0;
+
+			mf->base = newbase;
+			mf->size = newsize;
 		}
-		mf->size = newsize;
 	}
 	memcpy(mf->base + mf->offs, buffer, size);
 	mf->offs += size;

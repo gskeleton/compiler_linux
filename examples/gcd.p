@@ -6,8 +6,8 @@
 main()
     {
     print "Input two values\n"
-    new a = getvalue()
-    new b = getvalue()
+    rel a = getvalue()
+    rel b = getvalue()
     while (a != b)
         if (a > b)
             a = a - b

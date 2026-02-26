@@ -36,12 +36,13 @@
 
 typedef memfile_t MEMFILE;
 #define tMEMFILE  1
+#define FILENAME_SIZE (4096)
 #include "sc.h"
 
 
 MEMFILE *mfcreate(const char *filename)
 {
-  return memfile_creat(filename, 4096);
+  return memfile_creat(filename, FILENAME_SIZE);
 }
 
 void mfclose(MEMFILE *mf)
@@ -60,24 +61,27 @@ int mfdump(MEMFILE *mf)
   if (fp==NULL)
     return 0;
 
-  okay = (fwrite(mf->base, mf->usedoffs, 1, fp)==(size_t)mf->usedoffs);
+  okay = (fwrite(mf->base, 1, mf->usedoffs, fp) == mf->usedoffs);
 
   fclose(fp);
   return okay;
 }
 
-long mflength(const MEMFILE *mf)
+size_t mflength(const MEMFILE *mf)
 {
   return mf->usedoffs;
 }
 
 long mfseek(MEMFILE *mf,long offset,int whence)
 {
-  long length;
+  size_t length;
 
   assert(mf!=NULL);
-  if (mf->usedoffs == 0)
-    return 0L;          /* early exit: not a single byte in the file */
+
+  if (mf->usedoffs==0) {
+      memfile_seek(mf,0);
+      return 0L;
+  }
 
   /* find the size of the memory file */
   length=mflength(mf);
@@ -93,6 +97,8 @@ long mfseek(MEMFILE *mf,long offset,int whence)
     assert(offset<=0);
     offset+=length;
     break;
+  default:
+    return -1L;   /* invalid whence */
   } /* switch */
 
   /* clamp to the file length limit */
@@ -106,12 +112,12 @@ long mfseek(MEMFILE *mf,long offset,int whence)
   return offset;
 }
 
-unsigned int mfwrite(MEMFILE *mf,const unsigned char *buffer,unsigned int size)
+size_t mfwrite(MEMFILE *mf,const unsigned char *buffer,unsigned int size)
 {
   return (memfile_write(mf, buffer, size) ? size : 0);
 }
 
-unsigned int mfread(MEMFILE *mf,unsigned char *buffer,unsigned int size)
+size_t mfread(MEMFILE *mf,unsigned char *buffer,unsigned int size)
 {
   return memfile_read(mf, buffer, size);
 }
@@ -119,7 +125,7 @@ unsigned int mfread(MEMFILE *mf,unsigned char *buffer,unsigned int size)
 char *mfgets(MEMFILE *mf,char *string,unsigned int size)
 {
   char *ptr;
-  unsigned int read;
+  size_t read;
   long seek;
 
   assert(mf!=NULL);
@@ -141,6 +147,7 @@ char *mfgets(MEMFILE *mf,char *string,unsigned int size)
   /* find the first '\n' */
   ptr=strchr(string,'\n');
   if (ptr!=NULL) {
+   if ((ptr-string)+1<size)
     *(ptr+1)='\0';
     seek=(long)(ptr-string)+1-(long)read;
   } /* if */
@@ -155,11 +162,13 @@ char *mfgets(MEMFILE *mf,char *string,unsigned int size)
 
 int mfputs(MEMFILE *mf,const char *string)
 {
-  unsigned int written,length;
+  size_t written;
+  unsigned int length;
+
+  if (!mf || !string)
+    return 0;
 
   assert(mf!=NULL);
 
-  length=strlen(string);
-  written=mfwrite(mf,(unsigned char *)string,length);
-  return written==length;
+  return mfwrite(mf,(const unsigned char *)string,strlen(string))==strlen(string);
 }

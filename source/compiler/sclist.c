@@ -468,7 +468,7 @@ SC_FUNC stringlist *insert_dbgsymbol(symbol *sym)
     char string[2*sNAMEMAX+128];
     char symname[2*sNAMEMAX+16];
 
-    funcdisplayname(symname,sym->name);
+    funcdisplayname(symname,sizeof(symname),sym->name);
     /* address tag:name codestart codeend ident vclass [tag:dim ...] */
     if (sym->ident==iFUNCTN) {
       sprintf(string,"S:%" PRIxC " %x:%s %" PRIxC " %" PRIxC " %x %x",

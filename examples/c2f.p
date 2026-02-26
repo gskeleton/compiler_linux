@@ -2,8 +2,8 @@
 
 main()
     {
-    new Rational: Celsius
-    new Rational: Fahrenheit
+    rel Rational: Celsius
+    rel Rational: Fahrenheit
 
     print "Celsius\t Fahrenheit\n"
     for (Celsius = 5; Celsius <= 25; Celsius++)

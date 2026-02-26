@@ -210,7 +210,7 @@
      * terminals that in use today are in fact emulators.
      * Putty understands this code too, by many others do not.
      */
-    sprintf(str,"\033[8;%d;%dt",lines,columns);
+    (void)snprintf(str,sizeof(str),"\033[8;%d;%dt",lines,columns);
     amx_putstr(str);
     amx_fflush();
   }
@@ -933,6 +933,7 @@ static cell AMX_NATIVE_CALL n_print(AMX *amx,const cell *params)
 
   amx_GetAddr(amx,params[1],&cstr);
   amx_printstring(amx,cstr,NULL);
+  cons_putchar(NULL, __T('\n'));
 
   /* reset the colours */
   (void)amx_setattr(oldcolours & 0xff,(oldcolours >> 8) & 0x7f,(oldcolours >> 15) & 0x01);
@@ -955,6 +956,7 @@ static cell AMX_NATIVE_CALL n_printf(AMX *amx,const cell *params)
   CreateConsole();
   amx_GetAddr(amx,params[1],&cstr);
   amx_printstring(amx,cstr,&info);
+  cons_putchar(NULL, __T('\n'));
   amx_fflush();
   return 0;
 }
