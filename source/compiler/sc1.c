@@ -1225,13 +1225,6 @@ static void parseoptions(int argc,char **argv,char *oname,char *ename,char *pnam
         } /* if */
         break;
       case 'Z': {
-        symbol *sym;
-        pc_compat=toggle_option(ptr,pc_compat);
-        sym=findconst("__compat",NULL);
-        if (sym!=NULL) {
-          assert(sym!=NULL);
-          sym->addr=pc_compat;
-        } /* if */
         break;
       } /* case */
       case '\\':                /* use \ instead for escape characters */
@@ -1511,7 +1504,6 @@ static void about(void)
     pc_printf("         -w<num>  disable a specific warning by its number\n");
     pc_printf("         -X<num>  abstract machine size limit in bytes\n");
     pc_printf("         -XD<num> abstract machine data/stack size limit in bytes\n");
-    pc_printf("         -Z[+/-]  run in compatibility mode (default=%c)\n",pc_compat ? '+' : '-');
     pc_printf("         -E[+/-]  turn warnings in to errors\n");
     pc_printf("         -\\       use '\\' for escape characters\n");
     pc_printf("         -^       use '^' for escape characters\n");
@@ -1578,7 +1570,6 @@ static void setconstants(void)
   add_builtin_constant("__Pawn",VERSION_INT,sGLOBAL,0);
   add_builtin_constant("__PawnBuild",VERSION_BUILD,sGLOBAL,0);
   line_sym=add_builtin_constant("__line",0,sGLOBAL,0);
-  add_builtin_constant("__compat",pc_compat,sGLOBAL,0);
 
   debug=0;
   if ((sc_debug & (sCHKBOUNDS | sSYMBOLIC))==(sCHKBOUNDS | sSYMBOLIC))
