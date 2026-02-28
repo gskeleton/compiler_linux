@@ -1251,7 +1251,7 @@ static int command(void)
                   || sym->ident==iARRAY || sym->ident==iREFARRAY)
                 sym->usage |= uWRITTEN;
             } else {
-              error(17,name);     /* undefined symbol */
+              error(17,name);     /* undefined or undeclared symbol */
             } /* if */
             /* see if a comma follows the name */
             while (*lptr<=' ' && *lptr!='\0')
@@ -1376,7 +1376,7 @@ static int command(void)
           if (sym==NULL)
             sym=findglb(str,sSTATEVAR);
           if (sym==NULL || (sym->ident!=iFUNCTN && sym->ident!=iREFFUNC && (sym->usage & uDEFINE)==0)) {
-            error(17,str);        /* undefined symbol */
+            error(17,str);        /* undefined or undeclared symbol */
           } else {
             if (sym->ident==iFUNCTN || sym->ident==iREFFUNC) {
               if ((sym->usage & uNATIVE)!=0) {
@@ -1538,7 +1538,7 @@ static int command(void)
           } /* if */
         } /* if */
         if (!ret)
-          error(17,str);        /* undefined symbol */
+          error(17,str);        /* undefined or undeclared symbol */
       } else {
         error(20,str);          /* invalid symbol name */
       } /* if */

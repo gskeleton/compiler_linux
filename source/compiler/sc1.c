@@ -232,7 +232,7 @@ static char *prefix[3]={ "error", "fatal error", "warning" };
       pre=prefix[0];
     }
     if (firstline>=0)
-      fprintf(stderr,"%s(%d -- %d) : %s %03d: ",filename,firstline,lastline,pre,number);
+      fprintf(stderr,"%s(%d..%d) : %s %03d: ",filename,firstline,lastline,pre,number);
     else
       fprintf(stderr,"%s(%d) : %s %03d: ",filename,lastline,pre,number);
   } /* if */
@@ -559,9 +559,11 @@ int pc_compile(int argc, char *argv[])
     } /* for */
     pc_closesrc(ftmp);
     strcpy(inpfname,tname);
+    normalize_path(inpfname);
     free(tname);
   } else {
     strcpy(inpfname,get_sourcefile(0));
+    normalize_path(inpfname);
   } /* if */
   inpf_org=(FILE*)pc_opensrc(inpfname);
   if (inpf_org==NULL)
@@ -4162,7 +4164,7 @@ static int declargs(symbol *sym,int chkshadow)
       for (altidx=0; altidx<argcnt && strcmp(ptr,arglist[altidx].name)!=0; altidx++)
         /* nothing */;
       if (altidx>=argcnt) {
-        error(17,ptr);                  /* undefined symbol */
+        error(17,ptr);                  /* undefined or undeclared symbol */
       } else {
         assert(arglist[idx].defvalue.size.symname!=NULL);
         /* check the level against the number of dimensions */
@@ -6128,7 +6130,7 @@ fetchtok:
     if (sym==NULL)
       sym=findglb(str,sSTATEVAR);
     if (sym==NULL || (sym->ident!=iFUNCTN && sym->ident!=iREFFUNC && (sym->usage & uDEFINE)==0)) {
-      error(17,str);    /* undefined symbol */
+      error(17,str);    /* undefined or undeclared symbol */
       return FALSE;
     } /* if */
     if (sym->ident==iLABEL) {
@@ -6294,7 +6296,7 @@ static void SC_FASTCALL emit_param_data(emit_outval *p)
     } else {
       sym=findglb(str,sSTATIC);
       if (sym==NULL) {
-        error(17,str);  /* undefined symbol */
+        error(17,str);  /* undefined or undeclared symbol */
         break;
       } /* if */
       markusage(sym,uREAD | uWRITTEN);
@@ -6340,7 +6342,7 @@ static void SC_FASTCALL emit_param_local(emit_outval *p)
       sym=findglb(str,sSTATEVAR);
       if (sym==NULL) {
       undefined_sym:
-        error(17,str);  /* undefined symbol */
+        error(17,str);  /* undefined or undeclared symbol */
         break;
       } /* if */
       markusage(sym,uREAD | uWRITTEN);
@@ -6396,7 +6398,7 @@ static void SC_FASTCALL emit_param_function(emit_outval *p,int isnative)
   case tSYMBOL:
     sym=findglb(str,sSTATEVAR);
     if (sym==NULL) {
-      error(17,str);    /* undefined symbol */
+      error(17,str);    /* undefined or undeclared symbol */
       return;
     } /* if */
     markusage(sym,uREAD);

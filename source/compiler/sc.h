@@ -625,6 +625,7 @@ SC_FUNC void emit_parse_line(void);
 SC_FUNC void pushstk(stkitem val);
 SC_FUNC stkitem popstk(void);
 SC_FUNC void clearstk(void);
+SC_FUNC void normalize_path(char *path);
 SC_FUNC int plungequalifiedfile(char *name);  /* explicit path included */
 SC_FUNC int plungefile(char *name,int try_currentpath,int try_includepaths);   /* search through "include" paths */
 SC_FUNC void preprocess(void);

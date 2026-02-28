@@ -1346,13 +1346,13 @@ static int hier2(value *lval)
     if (sym==NULL)
       sym=findglb(st,sSTATEVAR);
     if (sym==NULL)
-      return errorsuggest(17,st,NULL,estSYMBOL,essVARCONST);  /* undefined symbol */
+      return errorsuggest(17,st,NULL,estSYMBOL,essVARCONST);  /* undefined or undeclared symbol */
     if (sym->ident==iCONSTEXPR)
       error(39);                /* constant symbol has no size */
     else if (sym->ident==iFUNCTN || sym->ident==iREFFUNC)
       error(72);                /* "function" symbol has no size */
     else if ((sym->usage & uDEFINE)==0)
-      return errorsuggest(17,st,NULL,estSYMBOL,essVARCONST);  /* undefined symbol */
+      return errorsuggest(17,st,NULL,estSYMBOL,essVARCONST);  /* undefined or undeclared symbol */
     clear_value(lval);
     lval->ident=iCONSTEXPR;
     lval->constval=1;           /* preset */
@@ -1403,9 +1403,9 @@ static int hier2(value *lval)
       if (sym==NULL)
         sym=findglb(st,sSTATEVAR);
       if (sym==NULL)
-        return errorsuggest(17,st,NULL,estSYMBOL,essVARCONST);  /* undefined symbol */
+        return errorsuggest(17,st,NULL,estSYMBOL,essVARCONST);  /* undefined or undeclared symbol */
       if ((sym->usage & uDEFINE)==0)
-        return errorsuggest(17,st,NULL,estSYMBOL,essVARCONST);  /* undefined symbol */
+        return errorsuggest(17,st,NULL,estSYMBOL,essVARCONST);  /* undefined or undeclared symbol */
       tag=sym->tag;
     } /* if */
     if (sym!=NULL && (sym->ident==iARRAY || sym->ident==iREFARRAY)) {
@@ -1838,7 +1838,7 @@ static int primary(value *lval)
         return FALSE;       /* return 0 for labels (expression error) */
       } /* if */
       if ((sym->usage & uDEFINE)==0)
-        error(17,st);    /* undefined symbol */
+        error(17,st);    /* undefined or undeclared symbol */
       lval->sym=sym;
       lval->ident=sym->ident;
       lval->tag=sym->tag;
@@ -1873,7 +1873,7 @@ static int primary(value *lval)
       } /* if */
     } else {
       if (!sc_allowproccall)
-        return errorsuggest(17,st,NULL,estSYMBOL,essVARCONST); /* undefined symbol */
+        return errorsuggest(17,st,NULL,estSYMBOL,essVARCONST); /* undefined or undeclared symbol */
       /* an unknown symbol, but used in a way compatible with the "procedure
        * call" syntax. So assume that the symbol refers to a function.
        */
@@ -2072,7 +2072,7 @@ static int nesting=0;
           lexstr="";
         argpos=findnamedarg(arg,lexstr);
         if (argpos<0) {
-          error(17,lexstr);       /* undefined symbol */
+          error(17,lexstr);       /* undefined or undeclared symbol */
           break;                  /* exit loop, argpos is invalid */
         } /* if */
         needtoken('=');
