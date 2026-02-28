@@ -5310,6 +5310,9 @@ static void statement(int *lastindent,int allow_decl)
   case ';':
     /* nothing */
     break;
+  case tSTOCK:
+    error(10);                  /* invalid function or declaration */
+    /* fallthrough */
   case tNEW:
   case tREL:
     if (allow_decl) {

@@ -20,6 +20,8 @@
  *
  *  Version: $Id: sc2.c 3655 2006-10-23 20:17:52Z thiadmer $
  */
+// Ensures stat() does not overflow when running on 64 bit systems
+#define _FILE_OFFSET_BITS 64
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -174,8 +176,8 @@ SC_FUNC int plungequalifiedfile(char *name)
         /* '/' to '\' */
         *p=DIRSEP_CHAR;
     #endif
-    stat(real_path, &st);
-    if (!S_ISDIR(st.st_mode))   /* ignore directories with the same name */
+    int err=stat(real_path, &st);
+    if (err==0 && !S_ISDIR(st.st_mode))   /* ignore directories with the same name */
       fp=(FILE*)pc_opensrc(real_path);
     if (fp==NULL) {
       *ext='\0';                /* on failure, restore filename */
