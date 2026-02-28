@@ -1,5 +1,14 @@
-project(pawnc C)
 cmake_minimum_required(VERSION 3.10)
+
+project(pawnc C)
+
+# You cannot use -flto here because it interferes with do_jump()
+#  and other internal functions, causing a signal 11 crash.
+# During compilation, the Pawn compiler encodes jumps and labels (do_jump()),
+#  and LTO (Link Time Optimization) changes how the compiler arranges code and data.
+#  This can make label indices (lbltab[i]) invalid or point to unexpected memory, triggering a crash.
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O2 -funroll-loops -finline-functions -falign-loops -falign-functions")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2 -funroll-loops -finline-functions -falign-loops -falign-functions")
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../../cmake)
 

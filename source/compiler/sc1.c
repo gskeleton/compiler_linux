@@ -1507,67 +1507,67 @@ static void setconfig(char *root)
 
 static void setcaption(void)
 {
-  pc_printf("Pawn compiler " VERSION_STR "\t \t \tCopyright (c) 1997-2006, ITB CompuPhase\n\n");
+  fputs("Pawn compiler " VERSION_STR "\t \t \tCopyright (c) 1997-2026, ITB CompuPhase\n\n", stdout);
 }
 
 static void about(void)
 {
-  if (strlen(errfname)==0) {
+  if (strlen(errfname) == 0) {
     setcaption();
-    pc_printf("Usage:   pawncc <filename> [filename...] [options]\n\n");
-    pc_printf("Options:\n");
-    pc_printf("         -A<num>  alignment in bytes of the data segment and the stack\n");
-    pc_printf("         -a       output assembler code\n");
+    fputs("Usage:   pawncc <filename> [filename...] [options]\n\n", stdout);
+    fputs("Options:\n", stdout);
+    fputs("         -A<num>  alignment in bytes of the data segment and the stack\n", stdout);
+    fputs("         -a       output assembler code\n", stdout);
 #if AMX_COMPACTMARGIN > 2
     pc_printf("         -C[+/-]  compact encoding for output file (default=%c)\n", sc_compress ? '+' : '-');
 #endif
-    pc_printf("         -c<name> codepage name or number; e.g. 1252 for Windows Latin-1\n");
-    pc_printf("         -Dpath   active directory path\n");
-    pc_printf("         -d<num>  debugging level (default=-d%d)\n",sc_debug);
-    pc_printf("             0    no symbolic information, no run-time checks\n");
-    pc_printf("             1    run-time checks, no symbolic information\n");
-    pc_printf("             2    full debug information and dynamic checking\n");
-    pc_printf("             3    same as -d2, but implies -O0\n");
-    pc_printf("         -e<name> set name of error file (quiet compile)\n");
-#if defined	__WIN32__ || defined _WIN32 || defined _Windows
-    pc_printf("         -H<hwnd> window handle to send a notification message on finish\n");
+    fputs("         -c<name> codepage name or number; e.g. 1252 for Windows Latin-1\n", stdout);
+    fputs("         -Dpath   active directory path\n", stdout);
+    pc_printf("         -d<num>  debugging level (default=-d%d)\n", sc_debug);
+    fputs("             0    no symbolic information, no run-time checks\n", stdout);
+    fputs("             1    run-time checks, no symbolic information\n", stdout);
+    fputs("             2    full debug information and dynamic checking\n", stdout);
+    fputs("             3    same as -d2, but implies -O0\n", stdout);
+    fputs("         -e<name> set name of error file (quiet compile)\n", stdout);
+#if defined __WIN32__ || defined _WIN32 || defined _Windows
+    fputs("         -H<hwnd> window handle to send a notification message on finish\n", stdout);
 #endif
-    pc_printf("         -i<name> path for include files\n");
-    pc_printf("         -l       create list file (preprocess only)\n");
-    pc_printf("         -o<name> set base name of (P-code) output file\n");
-    pc_printf("         -O<num>  optimization level (default=-O%d)\n",pc_optimize);
-    pc_printf("             0    no optimization\n");
-    pc_printf("             1    JIT-compatible optimizations only\n");
-    pc_printf("             2    full optimizations\n");
-    pc_printf("         -p<name> set name of \"prefix\" file\n");
-    pc_printf("         -R[+/-]  add detailed recursion report with call chains (default=%c)\n",pc_recursion ? '+' : '-');
+    fputs("         -i<name> path for include files\n", stdout);
+    fputs("         -l       create list file (preprocess only)\n", stdout);
+    fputs("         -o<name> set base name of (P-code) output file\n", stdout);
+    pc_printf("         -O<num>  optimization level (default=-O%d)\n", pc_optimize);
+    fputs("             0    no optimization\n", stdout);
+    fputs("             1    JIT-compatible optimizations only\n", stdout);
+    fputs("             2    full optimizations\n", stdout);
+    fputs("         -p<name> set name of \"prefix\" file\n", stdout);
+    pc_printf("         -R[+/-]  add detailed recursion report with call chains (default=%c)\n", pc_recursion ? '+' : '-');
 #if !defined SC_LIGHT
-    pc_printf("         -r[name] write cross reference report to console or to specified file\n");
+    fputs("         -r[name] write cross reference report to console or to specified file\n", stdout);
 #endif
-    pc_printf("         -S<num>  stack/heap size in cells (default=%d)\n",(int)pc_stksize);
-    pc_printf("         -s<num>  skip lines from the input file\n");
-    pc_printf("         -t<num>  TAB indent size (in character positions, default=%d)\n",sc_tabsize);
-    pc_printf("         -v<num>  verbosity level; 0=quiet, 1=normal, 2=verbose (default=%d)\n",verbosity);
-    pc_printf("         -w<num>  disable a specific warning by its number\n");
-    pc_printf("         -X<num>  abstract machine size limit in bytes\n");
-    pc_printf("         -XD<num> abstract machine data/stack size limit in bytes\n");
-    pc_printf("         -G[+/-]  enable/disable include guard to prevent multiple inclusions\n");
-    pc_printf("         -E[+/-]  turn warnings in to errors\n");
-    pc_printf("         -\\       use '\\' for escape characters\n");
-    pc_printf("         -^       use '^' for escape characters\n");
+    pc_printf("         -S<num>  stack/heap size in cells (default=%d)\n", (int)pc_stksize);
+    fputs("         -s<num>  skip lines from the input file\n", stdout);
+    pc_printf("         -t<num>  TAB indent size (in character positions, default=%d)\n", sc_tabsize);
+    pc_printf("         -v<num>  verbosity level; 0=quiet, 1=normal, 2=verbose (default=%d)\n", verbosity);
+    fputs("         -w<num>  disable a specific warning by its number\n", stdout);
+    fputs("         -X<num>  abstract machine size limit in bytes\n", stdout);
+    fputs("         -XD<num> abstract machine data/stack size limit in bytes\n", stdout);
+    fputs("         -G[+/-]  enable/disable include guard to prevent multiple inclusions\n", stdout);
+    fputs("         -E[+/-]  turn warnings in to errors\n", stdout);
+    fputs("         -\\       use '\\' for escape characters\n", stdout);
+    fputs("         -^       use '^' for escape characters\n", stdout);
     pc_printf("         -;[+/-]  require a semicolon to end each statement (default=%c)\n", sc_needsemicolon ? '+' : '-');
     pc_printf("         -([+/-]  require parentheses for function invocation (default=%c)\n", optproccall ? '-' : '+');
-    pc_printf("         sym=val  define constant \"sym\" with value \"val\"\n");
-    pc_printf("         sym=     define constant \"sym\" with value 0\n");
-#if defined	__WIN32__ || defined _WIN32 || defined _Windows || defined __MSDOS__
-    pc_printf("\nOptions may start with a dash or a slash; the options \"-d0\" and \"/d0\" are\n");
-    pc_printf("equivalent.\n");
+    fputs("         sym=val  define constant \"sym\" with value \"val\"\n", stdout);
+    fputs("         sym=     define constant \"sym\" with value 0\n", stdout);
+#if defined __WIN32__ || defined _WIN32 || defined _Windows || defined __MSDOS__
+    fputs("\nOptions may start with a dash or a slash; the options \"-d0\" and \"/d0\" are\n", stdout);
+    fputs("equivalent.\n", stdout);
 #endif
-    pc_printf("\nOptions with a value may optionally separate the value from the option letter\n");
-    pc_printf("with a colon (\":\") or an equal sign (\"=\"). That is, the options \"-d0\", \"-d=0\"\n");
-    pc_printf("and \"-d:0\" are all equivalent.\n");
+    fputs("\nOptions with a value may optionally separate the value from the option letter\n", stdout);
+    fputs("with a colon (\":\") or an equal sign (\"=\"). That is, the options \"-d0\", \"-d=0\"\n", stdout);
+    fputs("and \"-d:0\" are all equivalent.\n", stdout);
   } /* if */
-  longjmp(errbuf,3);        /* user abort */
+  longjmp(errbuf, 3); /* user abort */
 }
 
 static void setconstants(void)
