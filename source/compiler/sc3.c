@@ -1837,6 +1837,8 @@ static int primary(value *lval)
         ldconst(0,sPRI);    /* load 0 */
         return FALSE;       /* return 0 for labels (expression error) */
       } /* if */
+      if ((sym->usage & uDEFINE)==0)
+        error(17,st);    /* undefined symbol */
       lval->sym=sym;
       lval->ident=sym->ident;
       lval->tag=sym->tag;
