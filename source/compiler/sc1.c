@@ -2116,7 +2116,7 @@ static void declglb(char *firstname,int firsttag,int fpublic,int fstatic,int fst
     } else {
       tag=pc_addtag(NULL);
       if (lex(&val,&str)!=tSYMBOL)      /* read in (new) token */
-        error(20,str);                  /* invalid symbol name */
+        errorsuggest(20,str,NULL,estSYMBOL,essFUNCTN); /* invalid symbol name */
       assert(strlen(str)<=sNAMEMAX);
       strcpy(name,str);                 /* save symbol name */
     } /* if */
@@ -4945,7 +4945,7 @@ static int testsymbols(symbol *root,int level,int testlabs,int testconst)
     case iLABEL:
       if (testlabs) {
         if ((sym->usage & uDEFINE)==0) {
-          error(19,sym->name);      /* not a label: ... */
+          errorsuggest(19,sym->name,NULL,estSYMBOL,essLABEL); /* not a label: ... */
         } else if ((sym->usage & uREAD)==0) {
           errorset(sSETPOS,sym->lnumber);
           error(203,sym->name);     /* symbol isn't used: ... */
@@ -6035,7 +6035,7 @@ static void dogoto(void)
     //     sym->compound (nesting level of the label) against nestlevel;
     //     if sym->compound < nestlevel, call the destructor operator
   } else {
-    error(20,st);       /* illegal symbol name */
+    errorsuggest(20,st,NULL,estSYMBOL,essLABEL); /* illegal symbol name */
   } /* if */
   needtoken(tTERM);
 }
@@ -6075,7 +6075,7 @@ static symbol *fetchlab(char *name)
   sym=findloc(name);            /* labels are local in scope */
   if (sym) {
     if (sym->ident!=iLABEL)
-      error(19,sym->name);      /* not a label: ... */
+      errorsuggest(19,sym->name,NULL,estSYMBOL,essLABEL); /* not a label: ... */
   } else {
     sym=addsym(name,getlabel(),iLABEL,sLOCAL,0,0);
     assert(sym!=NULL);          /* fatal error 103 must be given on error */
