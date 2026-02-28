@@ -29,6 +29,7 @@
 # endif
 #endif
 
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 #include <limits.h>
@@ -193,23 +194,36 @@ static cell AMX_NATIVE_CALL heapspace(AMX *amx,const cell *params)
 
 static cell AMX_NATIVE_CALL funcidx(AMX *amx,const cell *params)
 {
+  int err;
   char name[64];
   cell *cstr;
-  int index,err,len;
+  int index;
 
-  amx_GetAddr(amx,params[1],&cstr);
+  err=amx_GetAddr(amx,params[1],&cstr);
+  if (err!=AMX_ERR_NONE) {
+    amx_RaiseError(amx,AMX_ERR_NATIVE);
+    index=0;
+    return index;
+  }
+  err=amx_GetString(name,cstr,0,64-1);
+  if (err!=AMX_ERR_NONE) {
+    amx_RaiseError(amx,AMX_ERR_NATIVE);
+    index=0;
+    return index;
+  }
+
+  /* null terminator */
+  name[64-1]='\0';
 
   /* verify string length */
-  amx_StrLen(cstr,&len);
-  if (len>=64) {
-    amx_RaiseError(amx,AMX_ERR_NATIVE);
-    return 0;
+  if (strlen(name)>=64-1) {
+      amx_RaiseError(amx,AMX_ERR_NATIVE);
+      index=0;
+      return index;
   } /* if */
 
-  amx_GetString(name,cstr,0,UNLIMITED);
-  err=amx_FindPublic(amx,name,&index);
-  if (err!=AMX_ERR_NONE)
-    index=-1;   /* this is not considered a fatal error */
+  if (amx_FindPublic(amx,name,&index) != AMX_ERR_NONE)
+      index=-1; /* this is not considered a fatal error */
   return index;
 }
 
@@ -442,6 +456,33 @@ static unsigned long IL_StandardRandom_seed = INITIAL_SEED; /* always use a non-
 #if defined __BORLANDC__ || defined __WATCOMC__
   #pragma argsused
 #endif
+static uint64_t rng_state = 0x853c49e6748fea9bULL;
+static uint64_t rng_inc   = 0xda3e39cb94b95bdbULL;
+
+static uint32_t core_random_pcg32(void)
+{
+    uint64_t oldstate = rng_state;
+
+    rng_state = oldstate * 6364136223846793005ULL + (rng_inc | 1);
+
+    uint32_t xorshifted = (uint32_t)(((oldstate >> 18u) ^ oldstate) >> 27u);
+    uint32_t rot = oldstate >> 59u;
+
+    return (xorshifted >> rot) | (xorshifted << ((-rot) & 31));
+}
+
+static cell AMX_NATIVE_CALL core_random(AMX *amx,const cell *params)
+{
+    (void)amx;
+
+    uint32_t result = core_random_pcg32();
+
+    if (params[1] > 0)
+        result %= (uint32_t)params[1];
+
+    return (cell)result;
+}
+#else
 static cell AMX_NATIVE_CALL core_random(AMX *amx,const cell *params)
 {
     unsigned long lo, hi, ll, lh, hh, hl;
@@ -468,6 +509,7 @@ static cell AMX_NATIVE_CALL core_random(AMX *amx,const cell *params)
         result %= params[1];
     return (cell)result;
 }
+#endif
 #endif
 
 
