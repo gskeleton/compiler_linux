@@ -27,7 +27,7 @@
  * across function parameter boundaries.
  *
  *
- *  Copyright (c) ITB CompuPhase, 1997-2006
+ *  Copyright (c) ITB CompuPhase, 1997-2026
  *
  *  This software is provided "as-is", without any express or implied warranty.
  *  In no event will the authors be held liable for any damages arising from
@@ -45,7 +45,7 @@
  *      misrepresented as being the original software.
  *  3.  This notice may not be removed or altered from any source distribution.
  *
- *  Version: $Id: sc7.c 3579 2006-06-06 13:35:29Z thiadmer $
+ *  Version: $Id: sc7.c 7599 2026-02-23 10:25:02Z thiadmer $
  */
 #include <assert.h>
 #include <stdio.h>

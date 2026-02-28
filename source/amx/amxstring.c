@@ -48,10 +48,6 @@
 #endif
 #include "amxcons.h"
 
-#if !defined isdigit
-# define isdigit(c)     ((unsigned)((c)-'0')<10u)
-#endif
-
 
 /* dest     the destination buffer; the buffer must point to the start of a cell
  * source   the source buffer, this must be aligned to a cell edge

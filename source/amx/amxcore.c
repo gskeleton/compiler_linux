@@ -456,28 +456,33 @@ static unsigned long IL_StandardRandom_seed = INITIAL_SEED; /* always use a non-
 #if defined __BORLANDC__ || defined __WATCOMC__
   #pragma argsused
 #endif
-static uint64_t rng_state = 0x853c49e6748fea9bULL;
-static uint64_t rng_inc   = 0xda3e39cb94b95bdbULL;
+/* PCG32 random number generator state */
+static uint64_t rng_state = 0x853c49e6748fea9bULL; /* internal 64-bit state */
+static uint64_t rng_inc   = 0xda3e39cb94b95bdbULL; /* stream selector (must be odd) */
 
 static uint32_t core_random_pcg32(void)
 {
     uint64_t oldstate = rng_state;
 
+    /* Advance internal state (LCG step) */
     rng_state = oldstate * 6364136223846793005ULL + (rng_inc | 1);
 
+    /* Output transformation (xorshift + rotate) */
     uint32_t xorshifted = (uint32_t)(((oldstate >> 18u) ^ oldstate) >> 27u);
     uint32_t rot = oldstate >> 59u;
 
+    /* Rotate right */
     return (xorshifted >> rot) | (xorshifted << ((-rot) & 31));
 }
 
 static cell AMX_NATIVE_CALL core_random(AMX *amx,const cell *params)
 {
-    (void)amx;
+    (void)amx; /* unused */
 
     uint32_t result = core_random_pcg32();
 
-    if (params[1] > 0)
+    /* Apply modulo if upper bound specified */
+    if (params[1]>0)
         result %= (uint32_t)params[1];
 
     return (cell)result;
@@ -540,12 +545,12 @@ const AMX_NATIVE_INFO core_Natives[] = {
   { NULL, NULL }        /* terminator */
 };
 
-int AMXEXPORT amx_CoreInit(AMX *amx)
+int AMXEXPORT AMXAPI amx_CoreInit(AMX *amx)
 {
   return amx_Register(amx, core_Natives, -1);
 }
 
-int AMXEXPORT amx_CoreCleanup(AMX *amx)
+int AMXEXPORT AMXAPI amx_CoreCleanup(AMX *amx)
 {
   (void)amx;
   #if !defined AMX_NOPROPLIST

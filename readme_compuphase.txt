@@ -168,7 +168,7 @@ The assembler version of the abstract machine (five times faster than the ANSI
 C version and over two times faster than the GNU C version) was written by
 Marc Peter (macpete@gmx.de). Marc holds the copyright of the file AMXEXEC.ASM,
 but its distribution and license fall under the same conditions as those
-stated in LICENSE.TXT.
+stated in LICENSE
 
 The Just-In-Time compiler (JIT) included in this release was also written by
 Marc Peter. As is apparent from the source code, the JIT is an evolutionary

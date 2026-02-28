@@ -262,31 +262,31 @@ static short lastfile;
   } /* if */
 
   if (number<100) {
-    assert(number>0 && number<(1+arraysize(errmsg)));
+    assert(number>0 && number<(1+sizearray(errmsg)));
     msg=errmsg[number-1];
     pre=prefix[0];
     errflag=TRUE;       /* set errflag (skip rest of erroneous expression) */
     errnum++;
   } else if (number<200) {
-    assert(number>=100 && number<(100+arraysize(fatalmsg)));
+    assert(number>=100 && number<(100+sizearray(fatalmsg)));
     msg=fatalmsg[number-100];
     pre=prefix[1];
     errnum++;           /* a fatal error also counts as an error */
   } else if (errwarn) {
-    assert(number>=200 && number<(200+arraysize(warnmsg)));
+    assert(number>=200 && number<(200+sizearray(warnmsg)));
     msg=warnmsg[number-200];
     pre=prefix[0];
     errflag=TRUE;
     errnum++;
   } else {
-    assert(number>=200 && number<(200+arraysize(warnmsg)));
+    assert(number>=200 && number<(200+sizearray(warnmsg)));
     msg=warnmsg[number-200];
     pre=prefix[2];
     warnnum++;
   } /* if */
 
   if (notice!=0) {
-    assert(notice>0 && notice<(1+arraysize(noticemsg)) && noticemsg[notice-1][0]!='\0');
+    assert(notice>0 && notice<(1+sizearray(noticemsg)) && noticemsg[notice-1][0]!='\0');
     strcpy(string,msg);
     strcpy(&string[strlen(string)-1],noticemsg[notice-1]);
     msg=string;

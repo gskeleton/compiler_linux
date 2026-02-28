@@ -377,12 +377,12 @@ const AMX_NATIVE_INFO args_Natives[] = {
   { NULL, NULL }        /* terminator */
 };
 
-int AMXEXPORT amx_ArgsInit(AMX *amx)
+int AMXEXPORT AMXAPI amx_ArgsInit(AMX *amx)
 {
   return amx_Register(amx, args_Natives, -1);
 }
 
-int AMXEXPORT amx_ArgsCleanup(AMX *amx)
+int AMXEXPORT AMXAPI amx_ArgsCleanup(AMX *amx)
 {
   (void)amx;
   return AMX_ERR_NONE;
@@ -394,7 +394,7 @@ int AMXEXPORT amx_ArgsCleanup(AMX *amx)
  * that is passed in to this function is NOT copied, so it may not be freed
  * after the call.
  */
-int AMXEXPORT amx_ArgsSetCmdLine(const TCHAR *cmd)
+int AMXEXPORT AMXAPI amx_ArgsSetCmdLine(const TCHAR *cmd)
 {
   cmdline = cmd;
   return AMX_ERR_NONE;
