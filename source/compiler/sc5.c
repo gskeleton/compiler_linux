@@ -50,7 +50,7 @@ static char *errmsg[] = {
 /*010*/  "invalid function or declaration\n",
 /*011*/  "invalid outside functions\n",
 /*012*/  "invalid function call, not a valid address\n",
-/*013*/  "no entry point (no public functions)\n",
+/*013*/  "no entry point (no public functions or main(){})\n",
 /*014*/  "invalid statement; not in switch\n",
 /*015*/  "\"default\" case must be the last case in switch statement\n",
 /*016*/  "multiple defaults in \"switch\"\n",

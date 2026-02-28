@@ -131,6 +131,27 @@ SC_FUNC void clearstk(void)
   assert(stktop==0);
 }
 
+SC_FUNC void normalize_path(char *path) {
+    /* normalize directory separator character */
+    #if DIRSEP_CHAR!='\\' /* linux */
+    char* p;
+    for (p=path; *p!='\0'; p++) {
+      if (*p=='\\') {
+        /* '\' to '/' */
+        *p=DIRSEP_CHAR;
+      } /* if */
+    } /* for */
+    #else                 /* windows */
+    char* p;
+    for (p=path; *p!='\0'; p++) {
+      if (*p=='/') {
+        /* '/' to '\' */
+        *p=DIRSEP_CHAR;
+      } /* if */
+    } /* for */
+    #endif
+}
+
 SC_FUNC int plungequalifiedfile(char *name)
 {
   static char extensions[][6] = {
@@ -162,20 +183,7 @@ SC_FUNC int plungequalifiedfile(char *name)
     ext=strchr(path,'\0');      /* save position */
     strcpy(ext,extensions[ext_idx]);
     strcpy(real_path,path);
-    /* normalize directory separator character */
-    #if DIRSEP_CHAR!='\\' /* linux */
-    char* p;
-    for (p=real_path; *p!='\0'; p++)
-      if (*p=='\\')
-        /* '\' to '/' */
-        *p=DIRSEP_CHAR;
-    #else                 /* windows */
-    char* p;
-    for (p=real_path; *p!='\0'; p++)
-      if (*p=='/')
-        /* '/' to '\' */
-        *p=DIRSEP_CHAR;
-    #endif
+    normalize_path(real_path);
     int err=stat(real_path, &st);
     if (err==0 && !S_ISDIR(st.st_mode))   /* ignore directories with the same name */
       fp=(FILE*)pc_opensrc(real_path);

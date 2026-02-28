@@ -745,19 +745,33 @@ cleanup:
       } /* if */
       if (pc_amxram>0 && (glb_declared+pc_stksize)*sizeof(cell)>=(unsigned long)pc_amxram)
         flag_exceed=1;
+      char buffer[528]={0};
+      int len;
       if ((sc_debug & sSYMBOLIC)!=0 || verbosity>=2 || stacksize+32>=(long)pc_stksize || flag_exceed) {
-        pc_printf("Header size:       %8ld bytes\n", (long)hdrsize);
-        pc_printf("Code size:         %8ld bytes\n", (long)code_idx);
-        pc_printf("Data size:         %8ld bytes\n", (long)glb_declared*sizeof(cell));
-        pc_printf("Stack/heap size:   %8ld bytes; ", (long)pc_stksize*sizeof(cell));
-        pc_printf("estimated max. usage");
+        len=snprintf(buffer,sizeof(buffer),"Header size:       %8ld bytes\n",(long)hdrsize);
+        fwrite(buffer,1,len,stdout);
+        fflush(stdout);
+        len=snprintf(buffer,sizeof(buffer),"Code size:         %8ld bytes\n",(long)code_idx);
+        fwrite(buffer,1,len,stdout);
+        fflush(stdout);
+        len=snprintf(buffer,sizeof(buffer),"Data size:         %8ld bytes\n",(long)glb_declared*sizeof(cell));
+        fwrite(buffer,1,len,stdout);
+        fflush(stdout);
+        len=snprintf(buffer,sizeof(buffer),"Stack/heap size:   %8ld bytes; ",(long)pc_stksize*sizeof(cell));
+        fwrite(buffer,1,len,stdout);
+        fflush(stdout);
+        fputs("estimated max. usage",stdout);
         if (recursion)
-          pc_printf(": unknown, due to recursion\n");
+          fputs(": unknown, due to recursion\n",stdout);
         else if ((pc_memflags & suSLEEP_INSTR)!=0)
-          pc_printf(": unknown, due to the \"sleep\" instruction\n");
+          fputs(": unknown, due to the \"sleep\" instruction\n",stdout);
         else
-          pc_printf("=%ld cells (%ld bytes)\n",stacksize,stacksize*sizeof(cell));
-        pc_printf("Total requirements:%8ld bytes\n", (long)hdrsize+(long)code_idx+(long)glb_declared*sizeof(cell)+(long)pc_stksize*sizeof(cell));
+        len=snprintf(buffer,sizeof(buffer),"=%ld cells (%ld bytes)\n",stacksize,stacksize*sizeof(cell));
+        fwrite(buffer,1,len,stdout);
+        fflush(stdout);
+        len=snprintf(buffer,sizeof(buffer),"Total requirements:%8ld bytes\n", (long)hdrsize+(long)code_idx+(long)glb_declared*sizeof(cell)+(long)pc_stksize*sizeof(cell));
+        fwrite(buffer,1,len,stdout);
+        fflush(stdout);
       } /* if */
       if (flag_exceed)
         error(106,pc_amxlimit+pc_amxram); /* this causes a jump back to label "cleanup" */
@@ -800,18 +814,28 @@ cleanup:
   delete_autolisttable();
   delete_heaplisttable();
   unregister_builtin_string();
+  char buffer[_MAX_PATH];
+  int len;
   if (errnum!=0) {
-    if (strlen(errfname)==0)
-      pc_printf("\n%d Error%s.\n",errnum,(errnum>1) ? "s" : "");
+    if (strlen(errfname)==0) {
+      buffer[0]='\0';
+      len=snprintf(buffer,sizeof(buffer),"\n%d Error%s.\n",errnum,(errnum>1) ? "s" : "");
+      fwrite(buffer,1,len,stdout);
+      fflush(stdout);
+    }
     retcode=1;
   } else if (warnnum!=0){
-    if (strlen(errfname)==0)
-      pc_printf("\n%d Warning%s.\n",warnnum,(warnnum>1) ? "s" : "");
+    if (strlen(errfname)==0) {
+      buffer[0]='\0';
+      len=snprintf(buffer,sizeof(buffer),"\n%d Warning%s.\n",warnnum,(warnnum>1) ? "s" : "");
+      fwrite(buffer,1,len,stdout);
+      fflush(stdout);
+    }
     retcode=0;          /* use "0", so that MAKE and similar tools continue */
   } else {
     retcode=jmpcode;
     if (retcode==0 && verbosity>=2)
-      pc_printf("\nDone.\n");
+      fputs("\n[Verbose]\n   Compilation completed successfully.\n",stdout);
   } /* if */
   #if defined	__WIN32__ || defined _WIN32 || defined _Windows
     if (IsWindow(hwndFinish))
