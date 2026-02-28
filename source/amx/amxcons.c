@@ -408,14 +408,21 @@ static int cons_putchar(void *dest,TCHAR ch)
 
 enum {
   SV_DECIMAL,
-  SV_HEX
+  SV_HEX,
+  SV_BINARY
 };
 
 static TCHAR *reverse(TCHAR *string,int stop)
 {
 	int start=0;
 	TCHAR temp;
-
+  if (format == SV_BINARY) {
+      unsigned long v = (unsigned long)value;	/* copy to unsigned value for shifting */
+      do {
+        buffer[stop++] = (TCHAR)((v & 1) + __T('0'));
+        v >>= 1;
+      } while (v != 0);
+  } /* if */
 	/* swap the string */
 	stop--;				/* avoid swapping the '\0' byte to the first position */
 	while (stop - start > 0) {
@@ -570,6 +577,25 @@ static int dochar(AMX *amx,TCHAR ch,cell param,TCHAR sign,TCHAR decpoint,int wid
   assert(f_putchar!=NULL);
 
   switch (ch) {
+  case __T('b'): {
+    ucell value;
+    int length=1;
+    amx_GetAddr(amx,param,&cptr);
+    value=*(ucell*)cptr;
+    while (value>=2) {
+      length++;
+      value>>=1;
+    } /* while */
+    width-=length;
+    if (sign!=__T('-'))
+      while (width-->0)
+        f_putchar(user,filler);
+    amx_strval(buffer,(long)*cptr,SV_BINARY,0);
+    f_putstr(user,buffer);
+    while (width-->0)
+      f_putchar(user,filler);
+    return 1;
+
   case __T('%'):
     f_putchar(user,ch);
     return 0;
