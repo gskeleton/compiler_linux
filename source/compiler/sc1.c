@@ -233,9 +233,9 @@ static char *prefix[3]={ "error", "fatal error", "warning" };
     }
     setvbuf(stdout,NULL,_IONBF,0);
     if (firstline>=0)
-      fprintf(stderr,"%s(%d..%d) : %s %03d: ",filename,firstline,lastline,pre,number);
+      fprintf(stderr,"%s:%d..%d: %s %03d: ",filename,firstline,lastline,pre,number);
     else
-      fprintf(stderr,"%s(%d) : %s %03d: ",filename,lastline,pre,number);
+      fprintf(stderr,"%s:%d: %s %03d: ",filename,lastline,pre,number);
   } /* if */
   vfprintf(stderr,message,argptr);
   fflush(stderr);
@@ -752,16 +752,18 @@ cleanup:
       char buffer[528]={0};
       int len;
       if ((sc_debug & sSYMBOLIC)!=0 || verbosity>=2 || stacksize+32>=(long)pc_stksize || flag_exceed) {
-        len=snprintf(buffer,sizeof(buffer),"Header size:       %8ld bytes\n",(long)hdrsize);
+        if (warnnum>0)
+          putchar('\n');
+        len=snprintf(buffer,sizeof(buffer),"* Header size..........: %8ld bytes\n",(long)hdrsize);
         fwrite(buffer,1,len,stdout);
         fflush(stdout);
-        len=snprintf(buffer,sizeof(buffer),"Code size:         %8ld bytes\n",(long)code_idx);
+        len=snprintf(buffer,sizeof(buffer),"* Code size............: %8ld bytes\n",(long)code_idx);
         fwrite(buffer,1,len,stdout);
         fflush(stdout);
-        len=snprintf(buffer,sizeof(buffer),"Data size:         %8ld bytes\n",(long)glb_declared*sizeof(cell));
+        len=snprintf(buffer,sizeof(buffer),"* Data size............: %8ld bytes\n",(long)glb_declared*sizeof(cell));
         fwrite(buffer,1,len,stdout);
         fflush(stdout);
-        len=snprintf(buffer,sizeof(buffer),"Stack/heap size:   %8ld bytes; ",(long)pc_stksize*sizeof(cell));
+        len=snprintf(buffer,sizeof(buffer),"* Stack/heap size......: %8ld bytes; ",(long)pc_stksize*sizeof(cell));
         fwrite(buffer,1,len,stdout);
         fflush(stdout);
         fputs("estimated max. usage",stdout);
@@ -773,7 +775,7 @@ cleanup:
         len=snprintf(buffer,sizeof(buffer),"=%ld cells (%ld bytes)\n",stacksize,stacksize*sizeof(cell));
         fwrite(buffer,1,len,stdout);
         fflush(stdout);
-        len=snprintf(buffer,sizeof(buffer),"Total requirements:%8ld bytes\n", (long)hdrsize+(long)code_idx+(long)glb_declared*sizeof(cell)+(long)pc_stksize*sizeof(cell));
+        len=snprintf(buffer,sizeof(buffer),"* Total requirements...: %8ld bytes\n", (long)hdrsize+(long)code_idx+(long)glb_declared*sizeof(cell)+(long)pc_stksize*sizeof(cell));
         fwrite(buffer,1,len,stdout);
         fflush(stdout);
       } /* if */

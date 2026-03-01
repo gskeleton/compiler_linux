@@ -140,9 +140,9 @@ static char *prefix[3]={ "error", "fatal error", "warning" };
     }
     setvbuf(stdout,NULL,_IONBF,0);
     if (firstline>=0)
-      fprintf(stderr,"%s(%d..%d) : %s %03d: ",filename,firstline,lastline,pre,number);
+      fprintf(stderr,"%s:%d..%d: %s %03d: ",filename,firstline,lastline,pre,number);
     else
-      fprintf(stderr,"%s(%d) : %s %03d: ",filename,lastline,pre,number);
+      fprintf(stderr,"%s:%d: %s %03d: ",filename,lastline,pre,number);
   } /* if */
   vfprintf(stderr,message,argptr);
   fflush(stderr);
