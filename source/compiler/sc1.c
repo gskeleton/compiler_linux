@@ -3051,6 +3051,8 @@ static void decl_enum(int vclass,int fstatic)
       enumsym->usage |= uENUMROOT;
       if (fstatic)
         enumsym->fnumber=filenum;
+    } else {
+      enumroot=NULL;
     }
     /* start a new list for the element names */
     if ((enumroot=(constvalue_root*)malloc(sizeof(constvalue_root)))==NULL)
@@ -3116,7 +3118,7 @@ static void decl_enum(int vclass,int fstatic)
   matchtoken(';');      /* eat an optional ; */
 
   /* set the enum name to the "next" value (typically the last value plus one) */
-  if (enumsym!=NULL) {
+  if (enumsym!=NULL && enumroot!=NULL) {
     assert((enumsym->usage & uENUMROOT)!=0);
     enumsym->addr=value;
     /* assign the constant list */
