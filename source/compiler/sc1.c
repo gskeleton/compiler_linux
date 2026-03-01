@@ -231,6 +231,7 @@ static char *prefix[3]={ "error", "fatal error", "warning" };
     if (number>=200 && pc_geterrorwarnings()){
       pre=prefix[0];
     }
+    setvbuf(stdout,NULL,_IONBF,0);
     if (firstline>=0)
       fprintf(stderr,"%s(%d..%d) : %s %03d: ",filename,firstline,lastline,pre,number);
     else
@@ -238,6 +239,7 @@ static char *prefix[3]={ "error", "fatal error", "warning" };
   } /* if */
   vfprintf(stderr,message,argptr);
   fflush(stderr);
+
   return 0;
 }
 

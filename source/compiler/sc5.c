@@ -236,8 +236,6 @@ static short lastfile;
   char string[128];
   int notice;
 
-  fputs("\033[1;36m", stdout);
-
   /* split the error field between the real error/warning number and an optional
    * "notice" number
    */
@@ -311,11 +309,13 @@ static short lastfile;
   } else {
     FILE *fp=fopen(errfname,"a");
     if (fp!=NULL) {
+      setvbuf(stdout,NULL,_IONBF,0);
       if (errstart>=0 && errstart!=errline)
         fprintf(fp,"%s(%d..%d) : %s %03d: ",inpfname,errstart,errline,pre,(int)number);
       else
         fprintf(fp,"%s(%d) : %s %03d: ",inpfname,errline,pre,(int)number);
       vfprintf(fp,msg,argptr);
+      fflush(stdout);
       fclose(fp);
     } /* if */
   } /* if */
